@@ -3,7 +3,7 @@ import cors from 'cors';
 import fetch from 'node-fetch';
 
 import { initializeApp } from "firebase/app";
-import {update, get, getDatabase, ref, set, query, orderByChild, equalTo} from "firebase/database";
+import {update, get, getDatabase, ref, set, query, orderByChild, equalTo, endAt} from "firebase/database";
 import cookieParser from 'cookie-parser';
 
 const app = express();
@@ -72,7 +72,6 @@ async function readFilteredData(path, item, value) {
         if (snapshot.exists()) {
             return snapshot.val();
         } else {
-            console.log('No data available');
             return 0;
         }
     } catch (error) {
@@ -133,7 +132,7 @@ app.post('/volonteer/register',processData('email', 'password', 'name', 'surname
         return res.status(400).send('Email already registered');
     }
 
-    const result = await setData(userPath, {email, password, name, surname, address, phone, type: "volonteer"});
+    const result = await setData(userPath, {password, name, surname, address, phone, type: "volonteer"});
     if (result) {
         res.status(200).send('User registered successfully');
     } else {
@@ -151,7 +150,7 @@ app.post('/shelter/register',processData('email', 'password', 'name', 'surname',
         return res.status(400).send('Email already registered');
     }
 
-    const result = await setData(userPath, {email, password, name, surname, address, phone, owner_name, owner_surname, owner_position, website, social_media, type: "shelter"});
+    const result = await setData(userPath, {password, name, surname, address, phone, owner_name, owner_surname, owner_position, website, social_media, type: "shelter"});
     if (result) {
         res.status(200).send('User registered successfully');
     } else {
@@ -183,6 +182,16 @@ app.post('/login',processData('email', 'password'), async (req, res) => {
 });
 
 
+app.get('/myData', checkLogin, async (req, res) => {
+    const result = await readData('user/' + req.email);
+    if (result != 0) {
+        res.status(200).send(result);
+    } else {
+        res.status(404).send('Not found');
+    }
+});
+
+
 app.post('/post', processData('photo', 'specie', 'sex', 'age', 'colour', 'health', 'status', 'description'), checkLogin, async (req, res) => {
     let { photo, specie, sex, age, colour, health, status, description } = req.body;
     age = parseInt(age);
@@ -204,12 +213,13 @@ app.post('/post', processData('photo', 'specie', 'sex', 'age', 'colour', 'health
 app.get('/myOffers', checkLogin, async (req, res) => {
     const pathType = req.accountType == 'shelter' ? 's' : 'v';
     const userPath = `${pathType}Post`; 
-
-    const result = await readFilteredData('user','name','te');
-    if (result) {
+    if (!req.params.key && !req.params.value) return res.status(400).send('No query proveded');
+    if (!["species", "age", "sex", "health", "status"].includes(req.params.key)) return res.status(400).send('filtering supported by species, age, sex, health, status');
+    const result = await readFilteredData(userPath,req.params.key, req.params.value);
+    if (result != 0) {
         res.status(200).send(result);
     } else {
-        res.status(500).send('Error');
+        res.status(404).send('Not found');
     }
 });
 
@@ -223,7 +233,22 @@ app.get('/myOffers', checkLogin, async (req, res) => {
 
 
 
+async function getItemsByName(targetName) {
+    const itemsRef = ref(db, 'vPost');
+    const nameQuery = query(itemsRef, orderByChild('age'), endAt(targetName));
+  
+    const snapshot = await get(nameQuery);
+    if (snapshot.exists()) {
+      return snapshot.val();  // returns an object with ids as keys
+    } else {
+      return {}; // or handle 'not found' case
+    }
+  }
 
+  getItemsByName(60).then(data => {
+    console.log(data); // { id1: { name: 'name1', ... } }
+  });
+//   readFilteredData('user')
 
 
 
