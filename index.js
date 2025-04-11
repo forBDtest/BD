@@ -122,6 +122,50 @@ function encodeValues(obj) {
 }
 
 
+//--------------------------
+app.post('/volonteer/register', async (req, res) => {
+    console.log('Registering user...');
+    let { email, password, name, surname, address, phone } = req.body;
+    email = encodeURIComponent(email);
+    password = encodeURIComponent(password);
+    name = encodeURIComponent(name);
+    address =encodeURIComponent(address);
+    phone =encodeURIComponent(phone);
+    surname =encodeURIComponent(surname);
+    // imageName =encodeURIComponent(imageName);
+
+    if (!email || !password || !name || !address || !surname || !phone) {
+        return res.status(400).send('Email, name, type of shelter and password are required');
+    }
+
+    const userPath = `volonteer/${email}`;
+    const existingUser = await readData(userPath);
+
+    if (existingUser) {
+        return res.status(400).send('Email already registered');
+    }
+
+    const result = await setData(userPath, {email, password, name, address, surname, phone});
+    if (result) {
+        res.status(200).send('User registered successfully');
+    } else {
+        res.status(500).send('Error registering user');
+    }
+});
+
+
+//--------------------------
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -142,15 +186,16 @@ function encodeValues(obj) {
 //email registration using database email + password in format /user/ [email:{password:1234}]
 app.post('/register', async (req, res) => {
     console.log('Registering user...');
-    let { email, password, type, name } = req.body;
+    let { email, password, type, name, address } = req.body;
     if (!["veterinaty", "shelter","kennel"].includes(type)) return res.status(400).send('type must be veterinaty, shelter, kennel');
     email = btoa(encodeURI(email));
     password = btoa(encodeURI(password));
     name = btoa(encodeURI(name));
     type = btoa(encodeURI(type));
-    console.log('Email:', email);
+    address = btoa(encodeURI(address));
+    // console.log('Email:', email);
 
-    if (!email || !password || !name) {
+    if (!email || !password || !name || !address) {
         return res.status(400).send('Email, name, type of shelter and password are required');
     }
 
@@ -161,7 +206,7 @@ app.post('/register', async (req, res) => {
         return res.status(400).send('Email already registered');
     }
 
-    const result = await setData(userPath, { password, type, name });
+    const result = await setData(userPath, { password, type, name, address });
     if (result) {
         res.status(200).send('User registered successfully');
     } else {
