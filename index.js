@@ -4,12 +4,13 @@ import fetch from 'node-fetch';
 
 import { initializeApp } from "firebase/app";
 import {update, get, getDatabase, ref, set } from "firebase/database";
+import cookieParser from 'cookie-parser';
 
 const app = express();
 const port = 3000;
 app.use(cors());
 app.use(express.json());
-
+app.use(cookieParser());
 // Your web app's Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyAqOFLpnmag9OFMG7yZ6H-NEHJIgEMZfUw",
@@ -30,11 +31,9 @@ async function setData(path, data) {
     const dbRef = ref(db, path);
     return set(dbRef, data)
         .then(() => {
-            console.log('Data written successfully');
             return 1; // Return 1 if successful
         })
         .catch((error) => {
-            console.error('Error writing data:', error);
             return 0; // Return 0 if an error occurs
         });
 }
@@ -44,14 +43,12 @@ async function readData(path) {
     try {
         const snapshot = await get(dbRef);
         if (snapshot.exists()) {
-            console.log('Data read successfully:', snapshot.val());
             return snapshot.val(); // Return the data if it exists
         } else {
             console.log('No data available');
             return 0; // Return 0 if no data is available
         }
     } catch (error) {
-        console.error('Error reading data:', error);
         return 0; // Return 0 if an error occurs
     }
 }
@@ -60,14 +57,22 @@ async function updateData(path, data) {
     const dbRef = ref(db, path);
     return update(dbRef, data)
         .then(() => {
-            console.log('Data written successfully');
             return 1; // Return 1 if successful
         })
         .catch((error) => {
-            console.error('Error writing data:', error);
             return 0; // Return 0 if an error occurs
         });
 }
+
+function generateToken(length = 32) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let token = '';
+    for (let i = 0; i < length; i++) {
+        token += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return token;
+}
+
 
 function processData(...fields) {
     return (req, res, next) => {
@@ -86,19 +91,29 @@ function processData(...fields) {
 }
 
 
+async function checkLogin (req,res,next) {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).send('Missing token');
+    const tokenData = await readData('token/'+ token);
+    if (tokenData == 0) return res.status(401).send('Wrong token');
+    req.email = tokenData.email;
+    req.accountType = tokenData.type;
+    next();
+}
+
 //--------------------------
 app.post('/volonteer/register',processData('email', 'password', 'name', 'surname','address', 'phone'), async (req, res) => {
     console.log('Registering user...');
     let { email, password, name, surname, address, phone } = req.body;
 
-    const userPath = `volonteer/${email}`;
+    const userPath = `user/${email}`;
     const existingUser = await readData(userPath);
 
     if (existingUser) {
         return res.status(400).send('Email already registered');
     }
 
-    const result = await setData(userPath, {email, password, name, surname, address, phone});
+    const result = await setData(userPath, {email, password, name, surname, address, phone, type: "volonteer"});
     if (result) {
         res.status(200).send('User registered successfully');
     } else {
@@ -106,35 +121,122 @@ app.post('/volonteer/register',processData('email', 'password', 'name', 'surname
     }
 });
 
-app.post('/volonteer/post', processData('photo', 'specie', 'sex', 'age', 'colour', 'health', 'status', 'description'), async (req, res) => {
-    console.log('Registering user...');
-    let { photo, specie, sex, age, colour, health, status, description } = req.body;
-    const id = await readData("vid");
-     setData("vid", id+1);
-    const userPath = `vpost/${id}`;
+app.post(
+    '/shelter/register',
+    processData(
+      'email', 'password', 'name', 'surname', 'address', 'phone',
+      'owner_name', 'owner_surname', 'owner_position',
+      'website', 'social_media'
+    ),
+    async (req, res) => {
+      console.log('Registering shelter...');
+  
+      const {
+        email, password, name, surname, address, phone,
+        owner_name, owner_surname, owner_position,
+        website, social_media
+      } = req.body;
+  
+      const shelterPath = `user/${email}`;
+      const existingShelter = await readData(shelterPath);
+  
+      if (existingShelter) {
+        return res.status(400).send('Email already registered');
+      }
+  
+      const shelterData = {
+        email,
+        password,
+        name,
+        surname,
+        address,
+        phone,
+        owner_name,
+        owner_surname,
+        owner_position,
+        website,
+        social_media,
+        type: "shelter"
+      };
+  
+      const result = await setData(shelterPath, shelterData);
+  
+      if (result) {
+          res.status(200).send('Shelter registered successfully');
+        } else {
+            res.status(500).send('Error registering shelter');
+        }
+    }
+);
 
-    const result = await setData(userPath, {photo, specie, sex, age, colour, health, status, description});
+app.post('/login/',processData('email', 'password'), async (req, res) => {
+    let { email, password} = req.body;
+
+    const userPath = `user/${email}`;
+    const userData = await readData(userPath);
+
+    if (!userData) {
+        return res.status(400).send('Email not registered');
+    }
+
+    if(password != userData.password) return res.status(400).send('Wrong password');
+
+    const newToken = generateToken();
+
+    const result = await setData('token/'+newToken, {email, type: userData.type});
     if (result) {
-        res.status(200).send('Pet registered successfully');
+        res.status(200).send(newToken);
     } else {
-        res.status(500).send('Error registering pet');
+        res.status(500).send('Error registering user');
     }
 });
 
-app.post('/shelter/post', processData('photo', 'specie', 'sex', 'age', 'colour', 'health', 'status', 'description'), async (req, res) => {
-    console.log('Registering user...');
+
+app.post('/post', processData('photo', 'specie', 'sex', 'age', 'colour', 'health', 'status', 'description'), checkLogin, async (req, res) => {
     let { photo, specie, sex, age, colour, health, status, description } = req.body;
     const id = await readData("sid");
      setData("sid", id+1);
-    const userPath = `spost/${id}`;
+    const userPath = `newpost/${id}`; 
 
-    const result = await setData(userPath, {photo, specie, sex, age, colour, health, status, description});
+    const result = await setData(userPath, {photo, specie, sex, age, colour, health, status, description, author: req.email, type: req.accountType});
     if (result) {
         res.status(200).send('Pet registered successfully');
     } else {
         res.status(500).send('Error registering pet');
     }
 });
+
+
+// app.post('/volonteer/post', processData('photo', 'specie', 'sex', 'age', 'colour', 'health', 'status', 'description'), async (req, res) => {
+//     console.log('Registering user...');
+//     let { photo, specie, sex, age, colour, health, status, description } = req.body;
+//     const id = await readData("vid");
+//      setData("vid", id+1);
+//     const userPath = `vpost/${id}`;
+
+//     const result = await setData(userPath, {photo, specie, sex, age, colour, health, status, description});
+//     if (result) {
+//         res.status(200).send('Pet registered successfully');
+//     } else {
+//         res.status(500).send('Error registering pet');
+//     }
+// });
+
+// app.post('/shelter/post', processData('photo', 'specie', 'sex', 'age', 'colour', 'health', 'status', 'description'), async (req, res) => {
+//     console.log('Registering user...');
+//     let { photo, specie, sex, age, colour, health, status, description } = req.body;
+//     const id = await readData("sid");
+//      setData("sid", id+1);
+//     const userPath = `spost/${id}`;
+
+//     const result = await setData(userPath, {photo, specie, sex, age, colour, health, status, description});
+//     if (result) {
+//         res.status(200).send('Pet registered successfully');
+//     } else {
+//         res.status(500).send('Error registering pet');
+//     }
+// });
+
 
 
 //--------------------------
