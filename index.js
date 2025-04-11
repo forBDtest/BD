@@ -3,7 +3,7 @@ import cors from 'cors';
 import fetch from 'node-fetch';
 
 import { initializeApp } from "firebase/app";
-import {update, get, getDatabase, ref, set } from "firebase/database";
+import {update, get, getDatabase, ref, set, query, orderByChild, equalTo} from "firebase/database";
 import cookieParser from 'cookie-parser';
 
 const app = express();
@@ -64,6 +64,23 @@ async function updateData(path, data) {
         });
 }
 
+async function readFilteredData(path, item, value) {
+    const dbRef = ref(db, path);
+    try {
+        const filterQuery = query(dbRef, orderByChild(item), equalTo(value));
+        const snapshot = await get(filterQuery);
+        if (snapshot.exists()) {
+            return snapshot.val();
+        } else {
+            console.log('No data available');
+            return 0;
+        }
+    } catch (error) {
+        return 0;
+    }
+}
+
+
 function generateToken(length = 32) {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let token = '';
@@ -73,6 +90,9 @@ function generateToken(length = 32) {
     return token;
 }
 
+function encodeData(input) {
+        return input.replace(/\./g, '%2E').replace(/#/g, '%23').replace(/\$/g, '%24').replace(/\[/g, '%5B').replace(/\]/g, '%5D');    
+}
 
 function processData(...fields) {
     return (req, res, next) => {
@@ -83,7 +103,7 @@ function processData(...fields) {
                 return res.status(400).send(`Field "${field}" is required`);
             }
 
-            req.body[field] = encodeURIComponent(value);
+            req.body[field] = encodeData(value);
         }
 
         next();
@@ -121,55 +141,26 @@ app.post('/volonteer/register',processData('email', 'password', 'name', 'surname
     }
 });
 
-app.post(
-    '/shelter/register',
-    processData(
-      'email', 'password', 'name', 'surname', 'address', 'phone',
-      'owner_name', 'owner_surname', 'owner_position',
-      'website', 'social_media'
-    ),
-    async (req, res) => {
-      console.log('Registering shelter...');
-  
-      const {
-        email, password, name, surname, address, phone,
-        owner_name, owner_surname, owner_position,
-        website, social_media
-      } = req.body;
-  
-      const shelterPath = `user/${email}`;
-      const existingShelter = await readData(shelterPath);
-  
-      if (existingShelter) {
-        return res.status(400).send('Email already registered');
-      }
-  
-      const shelterData = {
-        email,
-        password,
-        name,
-        surname,
-        address,
-        phone,
-        owner_name,
-        owner_surname,
-        owner_position,
-        website,
-        social_media,
-        type: "shelter"
-      };
-  
-      const result = await setData(shelterPath, shelterData);
-  
-      if (result) {
-          res.status(200).send('Shelter registered successfully');
-        } else {
-            res.status(500).send('Error registering shelter');
-        }
-    }
-);
+app.post('/shelter/register',processData('email', 'password', 'name', 'surname', 'address', 'phone', 'owner_name', 'owner_surname', 'owner_position', 'website', 'social_media'), async (req, res) => {
+    let { email, password, name, surname, address, phone, owner_name, owner_surname, owner_position, website, social_media } = req.body;
 
-app.post('/login/',processData('email', 'password'), async (req, res) => {
+    const userPath = `user/${email}`;
+    const existingUser = await readData(userPath);
+
+    if (existingUser) {
+        return res.status(400).send('Email already registered');
+    }
+
+    const result = await setData(userPath, {email, password, name, surname, address, phone, owner_name, owner_surname, owner_position, website, social_media, type: "shelter"});
+    if (result) {
+        res.status(200).send('User registered successfully');
+    } else {
+        res.status(500).send('Error registering user');
+    }
+});
+
+
+app.post('/login',processData('email', 'password'), async (req, res) => {
     let { email, password} = req.body;
 
     const userPath = `user/${email}`;
@@ -194,11 +185,14 @@ app.post('/login/',processData('email', 'password'), async (req, res) => {
 
 app.post('/post', processData('photo', 'specie', 'sex', 'age', 'colour', 'health', 'status', 'description'), checkLogin, async (req, res) => {
     let { photo, specie, sex, age, colour, health, status, description } = req.body;
-    const id = await readData("sid");
-     setData("sid", id+1);
-    const userPath = `newpost/${id}`; 
+    age = parseInt(age);
+    if (isNaN(age))  res.status(400).send('Age must be a number');
+    const pathType = req.accountType == 'shelter' ? 's' : 'v';
+    const id = await readData(pathType+"id");
+    setData(pathType+"id", id+1);
+    const userPath = `${pathType}Post/${id}`; 
 
-    const result = await setData(userPath, {photo, specie, sex, age, colour, health, status, description, author: req.email, type: req.accountType});
+    const result = await setData(userPath, {photo, specie, sex, age, colour, health, status, description, author: req.email});
     if (result) {
         res.status(200).send('Pet registered successfully');
     } else {
@@ -207,35 +201,18 @@ app.post('/post', processData('photo', 'specie', 'sex', 'age', 'colour', 'health
 });
 
 
-// app.post('/volonteer/post', processData('photo', 'specie', 'sex', 'age', 'colour', 'health', 'status', 'description'), async (req, res) => {
-//     console.log('Registering user...');
-//     let { photo, specie, sex, age, colour, health, status, description } = req.body;
-//     const id = await readData("vid");
-//      setData("vid", id+1);
-//     const userPath = `vpost/${id}`;
+app.get('/myOffers', checkLogin, async (req, res) => {
+    const pathType = req.accountType == 'shelter' ? 's' : 'v';
+    const userPath = `${pathType}Post`; 
 
-//     const result = await setData(userPath, {photo, specie, sex, age, colour, health, status, description});
-//     if (result) {
-//         res.status(200).send('Pet registered successfully');
-//     } else {
-//         res.status(500).send('Error registering pet');
-//     }
-// });
+    const result = await readFilteredData('user','name','te');
+    if (result) {
+        res.status(200).send(result);
+    } else {
+        res.status(500).send('Error');
+    }
+});
 
-// app.post('/shelter/post', processData('photo', 'specie', 'sex', 'age', 'colour', 'health', 'status', 'description'), async (req, res) => {
-//     console.log('Registering user...');
-//     let { photo, specie, sex, age, colour, health, status, description } = req.body;
-//     const id = await readData("sid");
-//      setData("sid", id+1);
-//     const userPath = `spost/${id}`;
-
-//     const result = await setData(userPath, {photo, specie, sex, age, colour, health, status, description});
-//     if (result) {
-//         res.status(200).send('Pet registered successfully');
-//     } else {
-//         res.status(500).send('Error registering pet');
-//     }
-// });
 
 
 
@@ -268,36 +245,6 @@ app.post('/post', processData('photo', 'specie', 'sex', 'age', 'colour', 'health
 
 
 
-//email registration using database email + password in format /user/ [email:{password:1234}]
-app.post('/register', async (req, res) => {
-    console.log('Registering user...');
-    let { email, password, type, name, address } = req.body;
-    if (!["veterinaty", "shelter","kennel"].includes(type)) return res.status(400).send('type must be veterinaty, shelter, kennel');
-    email = btoa(encodeURI(email));
-    password = btoa(encodeURI(password));
-    name = btoa(encodeURI(name));
-    type = btoa(encodeURI(type));
-    address = btoa(encodeURI(address));
-    // console.log('Email:', email);
-
-    if (!email || !password || !name || !address) {
-        return res.status(400).send('Email, name, type of shelter and password are required');
-    }
-
-    const userPath = `user/${email}`;
-    const existingUser = await readData(userPath);
-
-    if (existingUser) {
-        return res.status(400).send('Email already registered');
-    }
-
-    const result = await setData(userPath, { password, type, name, address });
-    if (result) {
-        res.status(200).send('User registered successfully');
-    } else {
-        res.status(500).send('Error registering user');
-    }
-});
 
 //read all database
 app.get('/dev/read', async (req, res) => {
@@ -309,103 +256,6 @@ app.get('/dev/read', async (req, res) => {
     }
 });
 
-//login using database email + password in format /user/ [email:{password:1234}]
-app.post('/login', async (req, res) => {
-    console.log('Logging in user...');
-    let { email, password } = req.body;
-    email = btoa(encodeURI(email));
-    password = btoa(encodeURI(password));
-    console.log('Email:', email);
-
-    if (!email || !password) {
-        return res.status(400).send('Email and password are required');
-    }
-
-    const userPath = `user/${email}`;
-    const userData = await readData(userPath);
-
-    if (userData) {
-        if (userData.password === password) {
-            res.status(200).send('User logged in successfully');
-        } else {
-            res.status(400).send('Invalid password');
-        }
-    } else {
-        res.status(400).send('Email not registered');
-    }
-});
-
-//update password using database email + password in format /user/ [email:{password:1234}]
-app.post('/update', async (req, res) => {
-    console.log('Updating user...');
-    let { email, password, newPassword } = req.body;
-    email = btoa(encodeURI(email));
-    password = btoa(encodeURI(password));
-    newPassword = btoa(encodeURI(newPassword));
-    console.log('Email:', email);
-
-    if (!email || !password || !newPassword) {
-        return res.status(400).send('Email, password, and new password are required');
-    }
-
-    const userPath = `user/${email}`;
-    const userData = await readData(userPath);
-
-    if (userData) {
-        if (userData.password === password) {
-            const result = await updateData(userPath, { password: newPassword });
-            if (result) {
-                res.status(200).send('User updated successfully');
-            } else {
-                res.status(500).send('Error updating user');
-            }
-        } else {
-            res.status(400).send('Invalid password');
-        }
-    } else {
-        res.status(400).send('Email not registered');
-    }
-});
-
-//delete user using database email + password in format /user/ [email:{password:1234}]
-app.post('/delete', async (req, res) => {
-    console.log('Deleting user...');
-    let { email, password } = req.body;
-    email = btoa(encodeURI(email));
-    password = btoa(encodeURI(password));
-    console.log('Email:', email);
-
-    if (!email || !password) {
-        return res.status(400).send('Email and password are required');
-    }
-
-    const userPath = `user/${email}`;
-    const userData = await readData(userPath);
-
-    if (userData) {
-        if (userData.password === password) {
-            const result = await setData(userPath, null);
-            if (result) {
-                res.status(200).send('User deleted successfully');
-            } else {
-                res.status(500).send('Error deleting user');
-            }
-        } else {
-            res.status(400).send('Invalid password');
-        }
-    } else {
-        res.status(400).send('Email not registered');
-    }
-});
-
-app.get('/dev/getuser/:email',async (req, res) => {
-    const email = btoa(encodeURI(req.params.email));
-    const userPath = `user/${email}`;
-    let data = await readData(userPath);
-    data = decodeValues(data);
-
-    res.send(data);
-});
 
 
 
@@ -413,16 +263,6 @@ app.get('/dev/getuser/:email',async (req, res) => {
 
 
 
-
-
-
-
-
-
-
-
-
-await updateData("user/us12", {84:5  });
 
 
 
