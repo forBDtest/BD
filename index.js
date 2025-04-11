@@ -69,74 +69,27 @@ async function updateData(path, data) {
         });
 }
 
-function filterByFieldValue(array, fieldName, value) {
-    return array.filter(item => {
-        const fieldValue = item[fieldName];
-        if (typeof fieldValue === 'string') {
-            return fieldValue.toLowerCase().includes(value.toLowerCase());
-        } else if (typeof fieldValue === 'number') {
-            return fieldValue.toString().includes(value.toString());
-        }
-        return false;
-    });
-}
+function processData(...fields) {
+    return (req, res, next) => {
+        for (const field of fields) {
+            const value = req.body[field];
 
-function decodeValues(obj) {
-    const decodedObj = {};
-    for (const key in obj) {
-        if (obj.hasOwnProperty(key)) {
-            try {
-                const value = obj[key];
-                if (typeof value === 'string') {
-                    decodedObj[key] = decodeURIComponent(atob(value));
-                } else {
-                    decodedObj[key] = value; // Keep non-string values as is
-                }
-            } catch (e) {
-                console.warn(`Failed to decode key "${key}":`, e);
-                decodedObj[key] = obj[key]; // Fallback to original
+            if (!value) {
+                return res.status(400).send(`Field "${field}" is required`);
             }
-        }
-    }
-    return decodedObj;
-}
 
-function encodeValues(obj) {
-    const decodedObj = {};
-    for (const key in obj) {
-        if (obj.hasOwnProperty(key)) {
-            try {
-                const value = obj[key];
-                if (typeof value === 'string') {
-                    decodedObj[key] = btoa(encodeURI(value));
-                } else {
-                    decodedObj[key] = value; // Keep non-string values as is
-                }
-            } catch (e) {
-                console.warn(`Failed to decode key "${key}":`, e);
-                decodedObj[key] = obj[key]; // Fallback to original
-            }
+            req.body[field] = encodeURIComponent(value);
         }
-    }
-    return decodedObj;
+
+        next();
+    };
 }
 
 
 //--------------------------
-app.post('/volonteer/register', async (req, res) => {
+app.post('/volonteer/register',processData('email', 'password', 'name', 'surname','address', 'phone'), async (req, res) => {
     console.log('Registering user...');
     let { email, password, name, surname, address, phone } = req.body;
-    email = encodeURIComponent(email);
-    password = encodeURIComponent(password);
-    name = encodeURIComponent(name);
-    address =encodeURIComponent(address);
-    phone =encodeURIComponent(phone);
-    surname =encodeURIComponent(surname);
-    // imageName =encodeURIComponent(imageName);
-
-    if (!email || !password || !name || !address || !surname || !phone) {
-        return res.status(400).send('Email, name, type of shelter and password are required');
-    }
 
     const userPath = `volonteer/${email}`;
     const existingUser = await readData(userPath);
@@ -145,11 +98,41 @@ app.post('/volonteer/register', async (req, res) => {
         return res.status(400).send('Email already registered');
     }
 
-    const result = await setData(userPath, {email, password, name, address, surname, phone});
+    const result = await setData(userPath, {email, password, name, surname, address, phone});
     if (result) {
         res.status(200).send('User registered successfully');
     } else {
         res.status(500).send('Error registering user');
+    }
+});
+
+app.post('/volonteer/post', processData('photo', 'specie', 'sex', 'age', 'colour', 'health', 'status', 'description'), async (req, res) => {
+    console.log('Registering user...');
+    let { photo, specie, sex, age, colour, health, status, description } = req.body;
+    const id = await readData("vid");
+     setData("vid", id+1);
+    const userPath = `vpost/${id}`;
+
+    const result = await setData(userPath, {photo, specie, sex, age, colour, health, status, description});
+    if (result) {
+        res.status(200).send('Pet registered successfully');
+    } else {
+        res.status(500).send('Error registering pet');
+    }
+});
+
+app.post('/shelter/post', processData('photo', 'specie', 'sex', 'age', 'colour', 'health', 'status', 'description'), async (req, res) => {
+    console.log('Registering user...');
+    let { photo, specie, sex, age, colour, health, status, description } = req.body;
+    const id = await readData("sid");
+     setData("sid", id+1);
+    const userPath = `spost/${id}`;
+
+    const result = await setData(userPath, {photo, specie, sex, age, colour, health, status, description});
+    if (result) {
+        res.status(200).send('Pet registered successfully');
+    } else {
+        res.status(500).send('Error registering pet');
     }
 });
 
