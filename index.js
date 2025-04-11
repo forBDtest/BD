@@ -90,7 +90,16 @@ function generateToken(length = 32) {
 }
 
 function encodeData(input) {
-        return input.replace(/\./g, '%2E').replace(/#/g, '%23').replace(/\$/g, '%24').replace(/\[/g, '%5B').replace(/\]/g, '%5D');    
+    let data = input+'';
+        return data.replace(/\./g, '%2E').replace(/#/g, '%23').replace(/\$/g, '%24').replace(/\[/g, '%5B').replace(/\]/g, '%5D');    
+}
+
+function formData(input, ...fields){
+let output = {};
+for (const field of fields) {
+    output[field] = input[field];
+}
+return output;
 }
 
 function processData(...fields) {
@@ -102,7 +111,7 @@ function processData(...fields) {
                 return res.status(400).send(`Field "${field}" is required`);
             }
 
-            req.body[field] = encodeData(value);
+            // req.body[field] = encodeData(value);
         }
 
         next();
@@ -125,7 +134,7 @@ app.post('/volonteer/register',processData('email', 'password', 'name', 'surname
     console.log('Registering user...');
     let { email, password, name, surname, address, phone } = req.body;
 
-    const userPath = `user/${email}`;
+    const userPath = `user/${encodeData(email)}`;
     const existingUser = await readData(userPath);
 
     if (existingUser) {
@@ -143,7 +152,7 @@ app.post('/volonteer/register',processData('email', 'password', 'name', 'surname
 app.post('/shelter/register',processData('email', 'password', 'name', 'surname', 'address', 'phone', 'owner_name', 'owner_surname', 'owner_position', 'website', 'social_media'), async (req, res) => {
     let { email, password, name, surname, address, phone, owner_name, owner_surname, owner_position, website, social_media } = req.body;
 
-    const userPath = `user/${email}`;
+    const userPath = `user/${encodeData(email)}`;
     const existingUser = await readData(userPath);
 
     if (existingUser) {
@@ -162,7 +171,7 @@ app.post('/shelter/register',processData('email', 'password', 'name', 'surname',
 app.post('/login',processData('email', 'password'), async (req, res) => {
     let { email, password} = req.body;
 
-    const userPath = `user/${email}`;
+    const userPath = `user/${encodeData(email)}`;
     const userData = await readData(userPath);
 
     if (!userData) {
@@ -181,21 +190,24 @@ app.post('/login',processData('email', 'password'), async (req, res) => {
     }
 });
 
-
+//user profile data
 app.get('/myData', checkLogin, async (req, res) => {
-    const result = await readData('user/' + req.email);
+    const result = await readData('user/' + encodeData(req.email));
     if (result != 0) {
-        res.status(200).send(result);
+        let formedData = formData(result, 'name', 'surname','address', 'phone');
+        formedData.email = req.email;
+        res.status(200).send(formedData);
     } else {
         res.status(404).send('Not found');
     }
 });
 
 
+
+//create offer based on user account type
 app.post('/post', processData('photo', 'specie', 'sex', 'age', 'colour', 'health', 'status', 'description'), checkLogin, async (req, res) => {
     let { photo, specie, sex, age, colour, health, status, description } = req.body;
-    age = parseInt(age);
-    if (isNaN(age))  res.status(400).send('Age must be a number');
+    if (isNaN(parseInt(age)))  res.status(400).send('Age must be a number');
     const pathType = req.accountType == 'shelter' ? 's' : 'v';
     const id = await readData(pathType+"id");
     setData(pathType+"id", id+1);
@@ -210,12 +222,14 @@ app.post('/post', processData('photo', 'specie', 'sex', 'age', 'colour', 'health
 });
 
 
-app.get('/myOffers', checkLogin, async (req, res) => {
-    const pathType = req.accountType == 'shelter' ? 's' : 'v';
+
+//marketplace with filters
+app.get('/market/filter', checkLogin, async (req, res) => {
+    const pathType = req.accountType == 'shelter' ? 'v' : 's';
     const userPath = `${pathType}Post`; 
-    if (!req.params.key && !req.params.value) return res.status(400).send('No query proveded');
-    if (!["species", "age", "sex", "health", "status"].includes(req.params.key)) return res.status(400).send('filtering supported by species, age, sex, health, status');
-    const result = await readFilteredData(userPath,req.params.key, req.params.value);
+    if (!req.query.key && !req.query.value) return res.status(400).send('Wrong query proveded');
+    if (!["colour", "species", "age", "sex", "health", "status"].includes(req.query.key)) return res.status(400).send('filtering supported by colour, species, age, sex, health, status');
+    const result = await readFilteredData(userPath,req.query.key, req.query.value);
     if (result != 0) {
         res.status(200).send(result);
     } else {
@@ -224,31 +238,49 @@ app.get('/myOffers', checkLogin, async (req, res) => {
 });
 
 
+//browse marketplace based on your accont type
+app.get('/market', checkLogin, async (req, res) => {
+    const pathType = req.accountType == 'shelter' ? 'v' : 's';
+    const userPath = `${pathType}Post`; 
+    const result = await readData(userPath);
+    if (result != 0) {
+        res.status(200).send(result);
+    } else {
+        res.status(404).send('Not found');
+    }
+});
+
+
+//get list of your own offers
+app.get('/myOffers', checkLogin, async (req, res) => {
+    const pathType = req.accountType == 'shelter' ? 's' : 'v';
+    const userPath = `${pathType}Post`; 
+    const result = await readFilteredData(userPath, "author", req.email);
+    if (result != 0) {
+        res.status(200).send(result);
+    } else {
+        res.status(404).send('Not found');
+    }
+});
+
+//delete your own offers by id
+app.get('/deleteOffer/:id', checkLogin, async (req, res) => {
+    const pathType = req.accountType == 'shelter' ? 's' : 'v';
+    if (isNaN(parseInt(req.params.id))) return res.status(400).send('Is that ID?! HUH, i didnt know :o');
+    const userPath = `${pathType}Post/`+req.params.id; 
+    const result = await readData(userPath);
+    if (result != 0) {
+        if (result.author != req.email) return res.status(403).send('Delteting someones offfer is bad...');
+        setData(userPath, null);
+        res.status(200).send('Deleted');
+    } else {
+        res.status(404).send('Not found');
+    }
+});
 
 
 //--------------------------
 
-
-
-
-
-
-async function getItemsByName(targetName) {
-    const itemsRef = ref(db, 'vPost');
-    const nameQuery = query(itemsRef, orderByChild('age'), endAt(targetName));
-  
-    const snapshot = await get(nameQuery);
-    if (snapshot.exists()) {
-      return snapshot.val();  // returns an object with ids as keys
-    } else {
-      return {}; // or handle 'not found' case
-    }
-  }
-
-  getItemsByName(60).then(data => {
-    console.log(data); // { id1: { name: 'name1', ... } }
-  });
-//   readFilteredData('user')
 
 
 
