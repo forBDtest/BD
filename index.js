@@ -79,7 +79,7 @@ async function readFilteredData(path, item, value) {
     }
 }
 
-
+//for sessions
 function generateToken(length = 32) {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let token = '';
@@ -89,11 +89,15 @@ function generateToken(length = 32) {
     return token;
 }
 
+
+//to encode path
 function encodeData(input) {
     let data = input+'';
         return data.replace(/\./g, '%2E').replace(/#/g, '%23').replace(/\$/g, '%24').replace(/\[/g, '%5B').replace(/\]/g, '%5D');    
 }
 
+
+//to send selected fields only
 function formData(input, ...fields){
 let output = {};
 for (const field of fields) {
@@ -102,6 +106,9 @@ for (const field of fields) {
 return output;
 }
 
+
+
+//to check if all fields are defined
 function processData(...fields) {
     return (req, res, next) => {
         for (const field of fields) {
@@ -119,6 +126,8 @@ function processData(...fields) {
 }
 
 
+
+//login via token and define email and account type
 async function checkLogin (req,res,next) {
     const token = req.cookies.token;
     if (!token) return res.status(401).send('Missing token');
@@ -323,15 +332,6 @@ app.get('/market/filter', checkLogin, async (req, res) => {
 
 
 
-//read all database
-app.get('/dev/read', async (req, res) => {
-    const data = await readData('/');
-    if (data) {
-        res.status(200).send(data);
-    } else {
-        res.status(404).send('No data available');
-    }
-});
 
 
 
