@@ -139,7 +139,8 @@ function processData(...fields) {
 
 //login via token and define email and account type
 async function checkLogin(req, res, next) {
-    const token = req.cookies.token;
+    // const token = req.cookies.token;
+    const token = req.headers['authorization'];
     if (!token) return res.status(401).send('Missing token');
     const tokenData = await readData('token/' + token);
     if (tokenData == 0) return res.status(401).send('Wrong token');
