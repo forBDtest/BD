@@ -158,8 +158,8 @@ app.post('/volonteer/register', processData('email', 'password', 'name', 'surnam
     }
 });
 
-app.post('/shelter/register', processData('email', 'password', 'name', 'address', 'phone', 'owner_name', 'owner_surname', 'owner_position', 'website', 'social_media'), async (req, res) => {
-    let { email, password, name, address, phone, owner_name, owner_surname, owner_position, website, social_media } = req.body;
+app.post('/shelter/register', processData('email', 'password', 'name', 'address', 'phone', 'contact_name', 'contact_surname', 'contact_position', 'website', 'social_media'), async (req, res) => {
+    let { email, password, name, address, phone, contact_name, contact_surname, contact_position, website, social_media } = req.body;
 
     const userPath = `user/${encodeData(email)}`;
     const existingUser = await readData(userPath);
@@ -168,7 +168,7 @@ app.post('/shelter/register', processData('email', 'password', 'name', 'address'
         return res.status(400).send('Email already registered');
     }
 
-    const result = await setData(userPath, { password, name, address, phone, owner_name, owner_surname, owner_position, website, social_media, accountType: "shelter" });
+    const result = await setData(userPath, { password, name, address, phone, contact_name, contact_surname, contact_position, website, social_media, accountType: "shelter" });
     if (result) {
         res.status(200).send('User registered successfully');
     } else {
@@ -214,7 +214,7 @@ app.get('/myInfo', checkLogin, async (req, res) => {
         if (result.accountType == 'volonteer') {
             formedData = formData(result, 'name', 'surname', 'address', 'phone');
         } else {
-            formedData = formData(result, 'name', 'surname', 'address', 'phone', 'owner_name', 'owner_surname', 'owner_position', 'website', 'social_media');
+            formedData = formData(result, 'name', 'surname', 'address', 'phone', 'contact_name', 'contact_surname', 'contact_position', 'website', 'social_media');
         }
         formedData.email = req.email;
         res.status(200).send(formedData);
@@ -233,7 +233,7 @@ app.get('/userInfo/:email', async (req, res) => {
         if (result.accountType == 'volonteer') {
             formedData = formData(result, 'name', 'surname', 'address', 'phone');
         } else {
-            formedData = formData(result, 'name', 'surname', 'address', 'phone', 'owner_name', 'owner_surname', 'owner_position', 'website', 'social_media');
+            formedData = formData(result, 'name', 'surname', 'address', 'phone', 'contact_name', 'contact_surname', 'contact_position', 'website', 'social_media');
         }
         formedData.email = req.email;
         res.status(200).send(formedData);
