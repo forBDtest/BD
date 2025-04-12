@@ -177,6 +177,8 @@ app.post('/shelter/register', processData('email', 'password', 'name', 'address'
 });
 
 
+
+//login to get token
 app.post('/login', processData('email', 'password'), async (req, res) => {
     let { email, password } = req.body;
 
