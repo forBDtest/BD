@@ -141,6 +141,7 @@ function processData(...fields) {
 async function checkLogin(req, res, next) {
     // const token = req.cookies.token;
     const token = req.headers['authorization'];
+    console.log(token)
     if (!token) return res.status(401).send('Missing token');
     const tokenData = await readData('token/' + token);
     if (tokenData == 0) return res.status(401).send('Wrong token');
