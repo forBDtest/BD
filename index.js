@@ -3,7 +3,7 @@ import cors from 'cors';
 import fetch from 'node-fetch';
 
 import { initializeApp } from "firebase/app";
-import {update, get, getDatabase, ref, set, query, orderByChild, equalTo, endAt} from "firebase/database";
+import { update, get, getDatabase, ref, set, query, orderByChild, equalTo, endAt } from "firebase/database";
 import cookieParser from 'cookie-parser';
 
 const app = express();
@@ -92,18 +92,18 @@ function generateToken(length = 32) {
 
 //to encode path
 function encodeData(input) {
-    let data = input+'';
-        return data.replace(/\./g, '%2E').replace(/#/g, '%23').replace(/\$/g, '%24').replace(/\[/g, '%5B').replace(/\]/g, '%5D');    
+    let data = input + '';
+    return data.replace(/\./g, '%2E').replace(/#/g, '%23').replace(/\$/g, '%24').replace(/\[/g, '%5B').replace(/\]/g, '%5D');
 }
 
 
 //to send selected fields only
-function formData(input, ...fields){
-let output = {};
-for (const field of fields) {
-    output[field] = input[field];
-}
-return output;
+function formData(input, ...fields) {
+    let output = {};
+    for (const field of fields) {
+        output[field] = input[field];
+    }
+    return output;
 }
 
 
@@ -118,7 +118,7 @@ function processData(...fields) {
                 return res.status(400).send(`Field "${field}" is required`);
             }
 
-            req.body[field] = value+'';
+            req.body[field] = value + '';
         }
 
         next();
@@ -128,18 +128,18 @@ function processData(...fields) {
 
 
 //login via token and define email and account type
-async function checkLogin (req,res,next) {
+async function checkLogin(req, res, next) {
     const token = req.cookies.token;
     if (!token) return res.status(401).send('Missing token');
-    const tokenData = await readData('token/'+ token);
+    const tokenData = await readData('token/' + token);
     if (tokenData == 0) return res.status(401).send('Wrong token');
     req.email = tokenData.email;
-    req.accountType = tokenData.type;
+    req.accountType = tokenData.accountType;
     next();
 }
 
 //--------------------------
-app.post('/volonteer/register',processData('email', 'password', 'name', 'surname','address', 'phone'), async (req, res) => {
+app.post('/volonteer/register', processData('email', 'password', 'name', 'surname', 'address', 'phone'), async (req, res) => {
     console.log('Registering user...');
     let { email, password, name, surname, address, phone } = req.body;
 
@@ -150,7 +150,7 @@ app.post('/volonteer/register',processData('email', 'password', 'name', 'surname
         return res.status(400).send('Email already registered');
     }
 
-    const result = await setData(userPath, {password, name, surname, address, phone, type: "volonteer"});
+    const result = await setData(userPath, { password, name, surname, address, phone, accountType: "volonteer" });
     if (result) {
         res.status(200).send('User registered successfully');
     } else {
@@ -158,7 +158,7 @@ app.post('/volonteer/register',processData('email', 'password', 'name', 'surname
     }
 });
 
-app.post('/shelter/register',processData('email', 'password', 'name', 'surname', 'address', 'phone', 'owner_name', 'owner_surname', 'owner_position', 'website', 'social_media'), async (req, res) => {
+app.post('/shelter/register', processData('email', 'password', 'name', 'surname', 'address', 'phone', 'owner_name', 'owner_surname', 'owner_position', 'website', 'social_media'), async (req, res) => {
     let { email, password, name, surname, address, phone, owner_name, owner_surname, owner_position, website, social_media } = req.body;
 
     const userPath = `user/${encodeData(email)}`;
@@ -168,7 +168,7 @@ app.post('/shelter/register',processData('email', 'password', 'name', 'surname',
         return res.status(400).send('Email already registered');
     }
 
-    const result = await setData(userPath, {password, name, surname, address, phone, owner_name, owner_surname, owner_position, website, social_media, type: "shelter"});
+    const result = await setData(userPath, { password, name, surname, address, phone, owner_name, owner_surname, owner_position, website, social_media, accountType: "shelter" });
     if (result) {
         res.status(200).send('User registered successfully');
     } else {
@@ -177,8 +177,8 @@ app.post('/shelter/register',processData('email', 'password', 'name', 'surname',
 });
 
 
-app.post('/login',processData('email', 'password'), async (req, res) => {
-    let { email, password} = req.body;
+app.post('/login', processData('email', 'password'), async (req, res) => {
+    let { email, password } = req.body;
 
     const userPath = `user/${encodeData(email)}`;
     const userData = await readData(userPath);
@@ -187,11 +187,11 @@ app.post('/login',processData('email', 'password'), async (req, res) => {
         return res.status(400).send('Email not registered');
     }
 
-    if(password != userData.password) return res.status(400).send('Wrong password');
+    if (password != userData.password) return res.status(400).send('Wrong password');
 
     const newToken = generateToken();
 
-    const result = await setData('token/'+newToken, {email, type: userData.type});
+    const result = await setData('token/' + newToken, { email, accountType: userData.accountType });
     if (result) {
         res.status(200).send(newToken);
     } else {
@@ -199,11 +199,42 @@ app.post('/login',processData('email', 'password'), async (req, res) => {
     }
 });
 
+
+//verify if token is still available
+app.get('/verifyToken', checkLogin, async (req, res) => {
+    res.status(200).send({ email: req.email, accountType: req.accountType });
+});
+
+
 //user profile data
-app.get('/myData', checkLogin, async (req, res) => {
+app.get('/myInfo', checkLogin, async (req, res) => {
     const result = await readData('user/' + encodeData(req.email));
     if (result != 0) {
-        let formedData = formData(result, 'name', 'surname','address', 'phone');
+        let formedData;
+        if (result.accountType == 'volonteer') {
+            formedData = formData(result, 'name', 'surname', 'address', 'phone');
+        } else {
+            formedData = formData(result, 'name', 'surname', 'address', 'phone', 'owner_name', 'owner_surname', 'owner_position', 'website', 'social_media');
+        }
+        formedData.email = req.email;
+        res.status(200).send(formedData);
+    } else {
+        res.status(404).send('Not found');
+    }
+});
+
+
+
+//user profile data
+app.get('/userInfo/:email', async (req, res) => {
+    const result = await readData('user/' + encodeData(req.params.email));
+    if (result != 0) {
+        let formedData;
+        if (result.accountType == 'volonteer') {
+            formedData = formData(result, 'name', 'surname', 'address', 'phone');
+        } else {
+            formedData = formData(result, 'name', 'surname', 'address', 'phone', 'owner_name', 'owner_surname', 'owner_position', 'website', 'social_media');
+        }
         formedData.email = req.email;
         res.status(200).send(formedData);
     } else {
@@ -216,13 +247,13 @@ app.get('/myData', checkLogin, async (req, res) => {
 //create offer based on user account type
 app.post('/myOffers', processData('photo', 'specie', 'sex', 'age', 'colour', 'health', 'status', 'description'), checkLogin, async (req, res) => {
     let { photo, specie, sex, age, colour, health, status, description } = req.body;
-    if (isNaN(parseInt(age)))  res.status(400).send('Age must be a number');
+    if (isNaN(parseInt(age))) res.status(400).send('Age must be a number');
     const pathType = req.accountType == 'shelter' ? 's' : 'v';
-    const id = await readData(pathType+"id");
-    setData(pathType+"id", id+1);
-    const userPath = `${pathType}Post/${id}`; 
+    const id = await readData(pathType + "id");
+    setData(pathType + "id", id + 1);
+    const userPath = `${pathType}Post/${id}`;
 
-    const result = await setData(userPath, {photo, specie, sex, age, colour, health, status, description, author: req.email});
+    const result = await setData(userPath, { photo, specie, sex, age, colour, health, status, description, author: req.email });
     if (result) {
         res.status(200).send('Pet registered successfully');
     } else {
@@ -233,7 +264,7 @@ app.post('/myOffers', processData('photo', 'specie', 'sex', 'age', 'colour', 'he
 //get list of your own offers
 app.get('/myOffers', checkLogin, async (req, res) => {
     const pathType = req.accountType == 'shelter' ? 's' : 'v';
-    const userPath = `${pathType}Post`; 
+    const userPath = `${pathType}Post`;
     const result = await readFilteredData(userPath, "author", req.email);
     if (result != 0) {
         res.status(200).send(result);
@@ -246,14 +277,14 @@ app.get('/myOffers', checkLogin, async (req, res) => {
 app.post('/editOffer/:id', processData('photo', 'specie', 'sex', 'age', 'colour', 'health', 'status', 'description'), checkLogin, async (req, res) => {
     if (isNaN(parseInt(req.params.id))) return res.status(400).send('Is that ID?! HUH, i didnt know :o');
     let { photo, specie, sex, age, colour, health, status, description } = req.body;
-    if (isNaN(parseInt(age)))  res.status(400).send('Age must be a number');
+    if (isNaN(parseInt(age))) res.status(400).send('Age must be a number');
     const pathType = req.accountType == 'shelter' ? 's' : 'v';
     const id = parseInt(req.params.id);
-    const userPath = `${pathType}Post/${id}`; 
+    const userPath = `${pathType}Post/${id}`;
     const check = await readData(userPath);
     if (!check) return res.status(400).send('No such pet');
     if (check.author != req.email) return res.status(403).send('Its not your offer');
-    const result = await setData(userPath, {photo, specie, sex, age, colour, health, status, description, author: req.email});
+    const result = await setData(userPath, { photo, specie, sex, age, colour, health, status, description, author: req.email });
     if (result) {
         res.status(200).send('Pet updated successfully');
     } else {
@@ -266,7 +297,7 @@ app.post('/editOffer/:id', processData('photo', 'specie', 'sex', 'age', 'colour'
 app.delete('/myOffers/:id', checkLogin, async (req, res) => {
     const pathType = req.accountType == 'shelter' ? 's' : 'v';
     if (isNaN(parseInt(req.params.id))) return res.status(400).send('Is that ID?! HUH, i didnt know :o');
-    const userPath = `${pathType}Post/`+req.params.id; 
+    const userPath = `${pathType}Post/` + req.params.id;
     const result = await readData(userPath);
     if (result != 0) {
         if (result.author != req.email) return res.status(403).send('Delteting someones offfer is bad...');
@@ -280,7 +311,7 @@ app.delete('/myOffers/:id', checkLogin, async (req, res) => {
 //browse marketplace based on your accont type
 app.get('/market', checkLogin, async (req, res) => {
     const pathType = req.accountType == 'shelter' ? 'v' : 's';
-    const userPath = `${pathType}Post`; 
+    const userPath = `${pathType}Post`;
     const result = await readData(userPath);
     if (result != 0) {
         res.status(200).send(result);
@@ -292,10 +323,10 @@ app.get('/market', checkLogin, async (req, res) => {
 //marketplace with filters
 app.get('/market/filter', checkLogin, async (req, res) => {
     const pathType = req.accountType == 'shelter' ? 'v' : 's';
-    const userPath = `${pathType}Post`; 
+    const userPath = `${pathType}Post`;
     if (!req.query.key && !req.query.value) return res.status(400).send('Wrong query proveded');
     if (!["colour", "species", "age", "sex", "health", "status"].includes(req.query.key)) return res.status(400).send('filtering supported by colour, species, age, sex, health, status');
-    const result = await readFilteredData(userPath,req.query.key, req.query.value);
+    const result = await readFilteredData(userPath, req.query.key, req.query.value);
     if (result != 0) {
         res.status(200).send(result);
     } else {
@@ -305,6 +336,51 @@ app.get('/market/filter', checkLogin, async (req, res) => {
 
 
 
+
+//add to favourited
+app.post('/liked', processData('id'), checkLogin, async (req, res) => {
+    setData('user/' + req.email + '/liked/' + req.body.id, true);
+    res.status(200).send('user/' + req.email + '/liked/' + req.body.id);
+});
+//remove
+app.delete('/liked', processData('id'), checkLogin, async (req, res) => {
+    setData('user/' + req.email + '/liked/' + req.body.id, null);
+    res.status(200).send('user/' + req.email + '/liked/' + req.body.id);
+});
+
+
+
+//show favourited offers
+app.get('/liked', checkLogin, async (req, res) => {
+    const ids = await readData('user/' + req.email + '/liked') || {};
+    console.log(ids);
+    const pathType = req.accountType == 'shelter' ? 'v' : 's';
+    const checks = Object.keys(ids).map(async (id) => {
+        const mainKeySnap = await readData(pathType + 'Post/' + id);
+        return { id, value: mainKeySnap.exists() };
+    });
+
+    const results = await Promise.all(checks);
+
+    // Build update object for keys that don’t exist in /main
+    const validItems = {};
+    let response = {}, correct = 1;
+    results.forEach(({ id, value }) => {
+        if (!value) correct = 0;
+        else {
+            response[id] = value;
+            validItems[id] = true;
+        }
+    });
+
+    if (correct) {
+        console.log('all are ok');
+    } else {
+        setData('user/'+req.email+'/liked/',validItems);
+        console.log('Deleted keys');
+    }
+    res.status(200).send(response);
+});
 
 
 
