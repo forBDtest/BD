@@ -340,12 +340,12 @@ app.get('/market/filter', checkLogin, async (req, res) => {
 //add to favourited
 app.post('/liked', processData('id'), checkLogin, async (req, res) => {
     setData('user/' + req.email + '/liked/' + req.body.id, true);
-    res.status(200).send('user/' + req.email + '/liked/' + req.body.id);
+    res.status(200).send('Added');
 });
 //remove
 app.delete('/liked', processData('id'), checkLogin, async (req, res) => {
     setData('user/' + req.email + '/liked/' + req.body.id, null);
-    res.status(200).send('user/' + req.email + '/liked/' + req.body.id);
+    res.status(200).send('Deteted');
 });
 
 
@@ -357,12 +357,10 @@ app.get('/liked', checkLogin, async (req, res) => {
     const pathType = req.accountType == 'shelter' ? 'v' : 's';
     const checks = Object.keys(ids).map(async (id) => {
         const mainKeySnap = await readData(pathType + 'Post/' + id);
-        return { id, value: mainKeySnap.exists() };
+        return { id, value: mainKeySnap };
     });
 
     const results = await Promise.all(checks);
-
-    // Build update object for keys that don’t exist in /main
     const validItems = {};
     let response = {}, correct = 1;
     results.forEach(({ id, value }) => {
