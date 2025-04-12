@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7fc;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+            padding: 20px 0;
+            color: #333;
+        }
+
+        
+
+       
+
+        #marketContainer {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            padding: 20px;
+        }
+
+        .market-item {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin: 15px;
+            width: 250px;
+            text-align: center;
+            padding: 15px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+
+        
+        .market-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .market-item img {
+            width: 100%;
+            max-height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .market-item h3 {
+            color: #333;
+            font-size: 18px;
+            margin: 10px 0;
+        }
+
+        .market-item p {
+            color: #555;
+            font-size: 14px;
+            margin: 5px 0;
+        }
+
+        .market-item button {
+            background-color: #6c63ff;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 14px;
+        }
+
+        .market-item button:hover {
+            background-color: #5a52e6;
+        }
+
+
+
+
+
+
+
+
+
+
+        
+
+        .footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    padding: 20px;
+    background-color: #ffffff;
+    border-top: 1px solid #ddd;
+    z-index: 10;
+}
+
+.footer p {
+    font-size: 14px;
+    color: #555;
+    margin: 0;
+}
+
+
+
+        #navLinks {
+    display: flex;
+    justify-content: center;   /* Centers the navigation items horizontally */
+    align-items: center;       /* Vertically aligns the items in the center */
+    background-color: #333;    /* Dark background for contrast */
+    padding: 15px 20px;        /* Add padding for spacing */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
+    margin-bottom: 30px;       /* Space below the navbar */
+}
+
+#navLinks a {
+    color: #fff;               /* White color for the links */
+    text-decoration: none;     /* Remove underline */
+    margin: 0 15px;            /* Spacing between the links */
+    font-size: 16px;           /* Set font size */
+    font-weight: 500;          /* Medium weight for readability */
+    transition: all 0.3s ease; /* Smooth transition for hover effect */
+    padding: 8px 15px;         /* Add some padding inside the links for better clickable area */
+    border-radius: 5px;        /* Rounded corners for each link */
+}
+
+#navLinks a:hover {
+    background-color: #5a52e6; /* Blue background on hover */
+    color: #fff;               /* White text color on hover */
+    transform: translateY(-2px); /* Slight lift effect on hover */
+}
+
+#navLinks .active {
+    background-color: #6c63ff; /* Highlight active page with green */
+    color: white;              /* White text for active link */
+    font-weight: 600;          /* Bold font for active link */
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.5); /* Subtle shadow for active state */
+}
+
+#navLinks a:focus {
+    outline: none; /* Remove default focus outline */
+}
+
+    </style>
+    <script>
+        // Function to create a new element and append it to the market container
+        function createMarketItem(item) {
+            const marketContainer = document.getElementById('marketContainer');
+            const itemDiv = document.createElement('div');
+            itemDiv.classList.add('market-item');
+            itemDiv.innerHTML = `
+                <img src="${item.photo}" alt="${item.specie}" class="market-item-photo">
+                <h3>${item.specie} - ${item.age} years</h3>
+                <p><strong>Colour:</strong> ${item.colour}</p>
+                <p><strong>Status:</strong> ${item.status}</p>
+                <p><strong>Health:</strong> ${item.health}</p>
+                <p><strong>Description:</strong> ${item.description}</p>
+                <button onclick="viewOffer('${item.id}')">View</button>
+                <button onclick="toggleLike('${item.id}')">Like</button>
+            `;
+            marketContainer.appendChild(itemDiv);
+        }
+
+        // Function to fetch the marketplace data and display it
+        async function fetchMarket() {
+            try {
+                const response = await fetch('/market');
+                const marketData = await response.json();
+                if (Object.keys(marketData).length != 0) {
+                    console.log(marketData);
+
+                    if (response.status === 200) {
+                        Object.entries(marketData).forEach(([key, item]) => {
+                            item.id = key;
+                            createMarketItem(item);
+                        });
+                    } else {
+                        alert('Failed to load market data');
+                    }
+                }
+            } catch (error) {
+                alert('Error fetching market data' + error);
+            }
+        }
+
+        // Function to view the offer (redirect to view-offer.html with offer id)
+        function viewOffer(id) {
+            window.location.href = `view-offer.html?id=${id}`;
+        }
+
+        // Function to toggle the "like" status for a market item
+        function toggleLike(id) {
+            const button = document.querySelector(`button[onclick="toggleLike('${id}')"]`);
+            if (button.innerText === 'Like') {
+                button.innerText = 'Unlike';
+                likeOffer(id);
+            } else {
+                button.innerText = 'Like';
+                unlikeOffer(id);
+            }
+        }
+
+        // Function to send a like request to the server
+        async function likeOffer(id) {
+            try {
+                const response = await fetch('/liked', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id })
+                });
+                if (response.status !== 200) {
+                    alert('Failed to like offer');
+                }
+            } catch (error) {
+                alert('Error liking offer');
+            }
+        }
+
+        // Function to send an unlike request to the server
+        async function unlikeOffer(id) {
+            try {
+                const response = await fetch('/liked', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id })
+                });
+                if (response.status !== 200) {
+                    alert('Failed to unlike offer');
+                }
+            } catch (error) {
+                alert('Error unliking offer');
+            }
+        }
+
+        // Fetch market data on page load
+        window.onload = fetchMarket;
+    </script>
+</head>
+
+<body>
+    
+    <div id="navLinks">
+        <a href="create-offer.html">Create Offer</a>
+        <a href="my-offers.html">My Posts</a>
+        <a href="liked.html">Liked</a>
+        <a href="market.html" class="active">Market</a> <!-- Active class for current page -->
+        <a href="profile.html">Profile</a>
+    </div>
+    
+    <h1>Market</h1>
+
+    <div id="marketContainer">
+        <!-- Market items will be appended here dynamically -->
+    </div>
+
+    <div class="footer">
+        <p>&copy; 2025 MarketPlace. All rights reserved.</p>
+    </div>
+</body>
+
+</html>

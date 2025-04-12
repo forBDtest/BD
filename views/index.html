@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <script>
+        function createObjectFromParams(...params) {
+            const obj = {};
+            params.forEach(param => {
+                const element = document.getElementById(param);
+                if (element) {
+                    obj[param] = element.value;
+                }
+            });
+            return obj;
+        }
+
+        async function handleLogin() {
+            const loginData = createObjectFromParams('email', 'password');
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(loginData)
+                });
+                const result = await response.json();
+
+                if (response.status === 200) {
+                    // Set the token in cookies
+                    document.cookie = `token=${result.token}; path=/`;
+
+                    // Redirect to profile page after successful login
+                    window.location.href = '/profile.html';
+                } else {
+                    alert(result.error || 'Login failed');
+                }
+            } catch (error) {
+                alert('An error occurred');
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Login</h1>
+    <form id="loginForm">
+        <input type="email" id="email" placeholder="Email" required><br><br>
+        <input type="password" id="password" placeholder="Password" required><br><br>
+        <button type="button" onclick="handleLogin()">Login</button>
+    </form>
+    <br>
+    <a href="shelter-register.html">Register as Shelter</a> | <a href="volonteer-register.html">Register as Volunteer</a>
+</body>
+</html>

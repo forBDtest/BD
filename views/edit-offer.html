@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Edit Offer</title>
+  <style>
+    nav {
+      margin: 15px;
+      text-align: center;
+    }
+    nav a {
+      margin: 0 10px;
+      text-decoration: none;
+      font-weight: bold;
+      color: #333;
+    }
+    form {
+      max-width: 500px;
+      margin: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    input, textarea, select {
+      padding: 8px;
+      font-size: 16px;
+    }
+    button {
+      padding: 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+  <script>
+    function getOfferId() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('id');
+    }
+
+    async function loadOffer() {
+      const id = getOfferId();
+      const response = await fetch(`/getOffer/${id}`);
+      const data = await response.json();
+
+      for (const key in data) {
+        if (document.getElementById(key)) {
+          document.getElementById(key).value = data[key];
+        }
+      }
+    }
+
+    function collectOfferData() {
+      const keys = ['photo', 'specie', 'sex', 'age', 'colour', 'health', 'status', 'description'];
+      const obj = {};
+      keys.forEach(k => {
+        obj[k] = document.getElementById(k).value;
+      });
+      return obj;
+    }
+
+    async function submitEdit(e) {
+      e.preventDefault();
+      const id = getOfferId();
+      const offer = collectOfferData();
+
+      const res = await fetch(`/editOffer/${id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(offer)
+      });
+
+      if (res.status === 200) {
+        alert('Offer updated!');
+        window.location.href = 'my-offers.html';
+      } else {
+        const err = await res.text();
+        alert('Error: ' + err);
+      }
+    }
+
+    window.onload = loadOffer;
+  </script>
+</head>
+<body>
+  <nav>
+    <a href="my-offers.html">← Back to My Offers</a> |
+    <a href="market.html">🌐 Market</a>
+  </nav>
+
+  <h1 style="text-align:center;">Edit Your Offer</h1>
+
+  <form onsubmit="submitEdit(event)">
+    <input id="photo" type="text" placeholder="Photo URL" required />
+    <input id="specie" type="text" placeholder="Specie" required />
+    <select id="sex" required>
+      <option value="">Select Sex</option>
+      <option value="male">Male</option>
+      <option value="female">Female</option>
+    </select>
+    <input id="age" type="number" placeholder="Age" required />
+    <input id="colour" type="text" placeholder="Colour" required />
+    <input id="health" type="text" placeholder="Health (e.g. vaccinated)" required />
+    <select id="status" required>
+      <option value="">Select Status</option>
+      <option value="available">Available</option>
+      <option value="adopted">Adopted</option>
+    </select>
+    <textarea id="description" placeholder="Description" required></textarea>
+
+    <button type="submit">Save Changes</button>
+  </form>
+</body>
+</html>

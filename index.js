@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import fetch from 'node-fetch';
-
+import path from 'path';
 import { initializeApp } from "firebase/app";
 import { update, get, getDatabase, ref, set, query, orderByChild, equalTo, endAt } from "firebase/database";
 import cookieParser from 'cookie-parser';
@@ -9,15 +9,15 @@ import cookieParser from 'cookie-parser';
 const app = express();
 const port = 3000;
 
-const corsOptions = {
-    origin: (origin, callback) => {
-      callback(null, true);  // This allows all origins
-    },
-    credentials: true,  // Allow cookies and authentication tokens
-  };
+// const corsOptions = {
+//     origin: (origin, callback) => {
+//       callback(null, true);  // This allows all origins
+//     },
+//     credentials: true,  // Allow cookies and authentication tokens
+//   };
   
-  app.use(cors(corsOptions));  
-// app.use(cors());
+//   app.use(cors(corsOptions));  
+app.use(cors());
   
 app.use(express.json());
 app.use(cookieParser());
@@ -125,7 +125,7 @@ function processData(...fields) {
             const value = req.body[field];
 
             if (!value) {
-                return res.status(400).send(`Field "${field}" is required`);
+                return res.status(400).send({error:`Field "${field}" is required`});
             }
 
             req.body[field] = value + '';
@@ -140,9 +140,9 @@ function processData(...fields) {
 //login via token and define email and account type
 async function checkLogin(req, res, next) {
     const token = req.cookies.token;
-    if (!token) return res.status(401).send('Missing token');
+    if (!token) return res.status(401).send({error:'Missing token'});
     const tokenData = await readData('token/' + token);
-    if (tokenData == 0) return res.status(401).send('Wrong token');
+    if (tokenData == 0) return res.status(401).send({error:'Wrong token'});
     req.email = tokenData.email;
     req.accountType = tokenData.accountType;
     next();
@@ -157,14 +157,14 @@ app.post('/volonteer/register', processData('email', 'password', 'name', 'surnam
     const existingUser = await readData(userPath);
 
     if (existingUser) {
-        return res.status(400).send('Email already registered');
+        return res.status(400).send({error:'Email already registered'});
     }
 
     const result = await setData(userPath, { password, name, surname, address, phone, accountType: "volonteer" });
     if (result) {
-        res.status(200).send('User registered successfully');
+        res.status(200).send({message:'User registered successfully'});
     } else {
-        res.status(500).send('Error registering user');
+        res.status(500).send({error:'Error registering user'});
     }
 });
 
@@ -175,14 +175,14 @@ app.post('/shelter/register', processData('email', 'password', 'name', 'address'
     const existingUser = await readData(userPath);
 
     if (existingUser) {
-        return res.status(400).send('Email already registered');
+        return res.status(400).send({error:'Email already registered'});
     }
 
     const result = await setData(userPath, { password, name, address, phone, contact_name, contact_surname, contact_position, website, social_media, accountType: "shelter" });
     if (result) {
-        res.status(200).send('User registered successfully');
+        res.status(200).send({message:'User registered successfully'});
     } else {
-        res.status(500).send('Error registering user');
+        res.status(500).send({error:'Error registering user'});
     }
 });
 
@@ -196,10 +196,10 @@ app.post('/login', processData('email', 'password'), async (req, res) => {
     const userData = await readData(userPath);
 
     if (!userData) {
-        return res.status(400).send('Email not registered');
+        return res.status(400).send({error:'Email not registered'});
     }
 
-    if (password != userData.password) return res.status(400).send('Wrong password');
+    if (password != userData.password) return res.status(400).send({error:'Wrong password'});
 
     const newToken = generateToken();
 
@@ -207,7 +207,7 @@ app.post('/login', processData('email', 'password'), async (req, res) => {
     if (result) {
         res.status(200).send({token:newToken});
     } else {
-        res.status(500).send('Error registering user');
+        res.status(500).send({error:'Error registering user'});
     }
 });
 
@@ -229,9 +229,10 @@ app.get('/myInfo', checkLogin, async (req, res) => {
             formedData = formData(result, 'name', 'surname', 'address', 'phone', 'contact_name', 'contact_surname', 'contact_position', 'website', 'social_media');
         }
         formedData.email = req.email;
+        formedData.accountType = req.accountType;
         res.status(200).send(formedData);
     } else {
-        res.status(404).send('Not found');
+        res.status(404).send({error:'Not found'});
     }
 });
 
@@ -248,9 +249,10 @@ app.get('/userInfo/:email', async (req, res) => {
             formedData = formData(result, 'name', 'surname', 'address', 'phone', 'contact_name', 'contact_surname', 'contact_position', 'website', 'social_media');
         }
         formedData.email = req.email;
+        formedData.accountType = req.accountType;
         res.status(200).send(formedData);
     } else {
-        res.status(404).send('Not found');
+        res.status(404).send({error:'Not found'});
     }
 });
 
@@ -259,7 +261,7 @@ app.get('/userInfo/:email', async (req, res) => {
 //create offer based on user account type
 app.post('/myOffers', processData('photo', 'specie', 'sex', 'age', 'colour', 'health', 'status', 'description'), checkLogin, async (req, res) => {
     let { photo, specie, sex, age, colour, health, status, description } = req.body;
-    if (isNaN(parseInt(age))) res.status(400).send('Age must be a number');
+    if (isNaN(parseInt(age))) res.status(400).send({error:'Age must be a number'});
     const pathType = req.accountType == 'shelter' ? 's' : 'v';
     const id = await readData(pathType + "id");
     setData(pathType + "id", id + 1);
@@ -267,9 +269,9 @@ app.post('/myOffers', processData('photo', 'specie', 'sex', 'age', 'colour', 'he
 
     const result = await setData(userPath, { photo, specie, sex, age, colour, health, status, description, author: req.email });
     if (result) {
-        res.status(200).send('Pet registered successfully');
+        res.status(200).send({message:'Pet registered successfully'});
     } else {
-        res.status(500).send('Error registering pet');
+        res.status(500).send({error:'Error registering pet'});
     }
 });
 
@@ -287,20 +289,20 @@ app.get('/myOffers', checkLogin, async (req, res) => {
 
 //edit offer
 app.post('/editOffer/:id', processData('photo', 'specie', 'sex', 'age', 'colour', 'health', 'status', 'description'), checkLogin, async (req, res) => {
-    if (isNaN(parseInt(req.params.id))) return res.status(400).send('Is that ID?! HUH, i didnt know :o');
+    if (isNaN(parseInt(req.params.id))) return res.status(400).send({error:'Is that ID?! HUH, i didnt know :o'});
     let { photo, specie, sex, age, colour, health, status, description } = req.body;
-    if (isNaN(parseInt(age))) res.status(400).send('Age must be a number');
+    if (isNaN(parseInt(age))) res.status(400).send({error:'Age must be a number'});
     const pathType = req.accountType == 'shelter' ? 's' : 'v';
     const id = parseInt(req.params.id);
     const userPath = `${pathType}Post/${id}`;
     const check = await readData(userPath);
-    if (!check) return res.status(400).send('No such pet');
-    if (check.author != req.email) return res.status(403).send('Its not your offer');
+    if (!check) return res.status(400).send({error:'No such pet'});
+    if (check.author != req.email) return res.status(403).send({error:'Its not your offer'});
     const result = await setData(userPath, { photo, specie, sex, age, colour, health, status, description, author: req.email });
     if (result) {
-        res.status(200).send('Pet updated successfully');
+        res.status(200).send({message:'Pet updated successfully'});
     } else {
-        res.status(500).send('Error updating pet');
+        res.status(500).send({error:'Error updating pet'});
     }
 });
 
@@ -308,23 +310,43 @@ app.post('/editOffer/:id', processData('photo', 'specie', 'sex', 'age', 'colour'
 //delete your own offers by id
 app.delete('/myOffers/:id', checkLogin, async (req, res) => {
     const pathType = req.accountType == 'shelter' ? 's' : 'v';
-    if (isNaN(parseInt(req.params.id))) return res.status(400).send('Is that ID?! HUH, i didnt know :o');
+    if (isNaN(parseInt(req.params.id))) return res.status(400).send({error:'Is that ID?! HUH, i didnt know :o'});
     const userPath = `${pathType}Post/` + req.params.id;
     const result = await readData(userPath);
     if (result != 0) {
-        if (result.author != req.email) return res.status(403).send('Delteting someones offfer is bad...');
+        if (result.author != req.email) return res.status(403).send({error:'Delteting someones offfer is bad...'});
         setData(userPath, null);
-        res.status(200).send('Deleted');
+        res.status(200).send({message:'Deleted'});
     } else {
-        res.status(404).send('Not found');
+        res.status(404).send({error:'Not found'});
     }
 });
+
+
+
+
+//get single offer
+
+//delete your own offers by id
+app.get('/getOffer/:id', checkLogin, async (req, res) => {
+    const pathType = req.accountType == 'shelter' ? 's' : 'v';
+    if (isNaN(parseInt(req.params.id))) return res.status(400).send({error:'Is that ID?! HUH, i didnt know :o'});
+    const userPath = `${pathType}Post/` + req.params.id;
+    const result = await readData(userPath);
+    if (result != 0) {
+        res.status(200).send(result);
+    } else {
+        res.status(404).send({error:'Not found'});
+    }
+});
+
+
 
 //browse marketplace based on your accont type
 app.get('/market', checkLogin, async (req, res) => {
     const pathType = req.accountType == 'shelter' ? 'v' : 's';
     const userPath = `${pathType}Post`;
-    const result = await readData(userPath);
+    let result = await readData(userPath);
     if (result != 0) {
         res.status(200).send(result);
     } else {
@@ -336,13 +358,13 @@ app.get('/market', checkLogin, async (req, res) => {
 app.get('/market/filter', checkLogin, async (req, res) => {
     const pathType = req.accountType == 'shelter' ? 'v' : 's';
     const userPath = `${pathType}Post`;
-    if (!req.query.key && !req.query.value) return res.status(400).send('Wrong query proveded');
-    if (!["colour", "species", "age", "sex", "health", "status"].includes(req.query.key)) return res.status(400).send('filtering supported by colour, species, age, sex, health, status');
+    if (!req.query.key && !req.query.value) return res.status(400).send({error:'Wrong query proveded'});
+    if (!["colour", "species", "age", "sex", "health", "status"].includes(req.query.key)) return res.status(400).send({error:'filtering supported by colour, species, age, sex, health, status'});
     const result = await readFilteredData(userPath, req.query.key, req.query.value);
     if (result != 0) {
         res.status(200).send(result);
     } else {
-        res.status(404).send({});
+        res.status(200).send({});
     }
 });
 
@@ -352,12 +374,12 @@ app.get('/market/filter', checkLogin, async (req, res) => {
 //add to favourited
 app.post('/liked', processData('id'), checkLogin, async (req, res) => {
     setData('user/' + req.email + '/liked/' + req.body.id, true);
-    res.status(200).send('Added');
+    res.status(200).send({message:'Added'});
 });
 //remove
 app.delete('/liked', processData('id'), checkLogin, async (req, res) => {
     setData('user/' + req.email + '/liked/' + req.body.id, null);
-    res.status(200).send('Deteted');
+    res.status(200).send({message:'Deteted'});
 });
 
 
@@ -406,12 +428,70 @@ app.get('/liked', checkLogin, async (req, res) => {
 
 
 
+import { fileURLToPath } from 'url';
 
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+app.use(express.static(path.join(__dirname, 'public')));
+app.get('/index.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'index.html'));
+  });
+  
+  // Login Page
+  app.get('/login.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'login.html'));
+});
 
+// Serve shelter registration page
+app.get('/shelter-register.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'shelter-register.html'));
+});
 
+// Serve volunteer registration page
+app.get('/volonteer-register.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'volonteer-register.html'));
+});
 
+// Serve market page
+app.get('/market.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'market.html'));
+});
 
+// Serve profile page
+app.get('/profile.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'profile.html'));
+});
+
+// Serve create offer page
+app.get('/create-offer.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'create-offer.html'));
+});
+
+// Serve view offer page
+app.get('/view-offer.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'view-offer.html'));
+});
+
+// Serve liked offers page
+app.get('/liked.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'liked.html'));
+});
+
+// Serve user data page
+app.get('/user.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'user.html'));
+});
+
+// Serve my offers page
+app.get('/my-offers.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'my-offers.html'));
+});
+
+// Serve edit offer page
+app.get('/edit-offer.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'edit-offer.html'));
+});
 
 
 

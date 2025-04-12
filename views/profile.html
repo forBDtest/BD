@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+    <script>
+        async function fetchProfile() {
+            try {
+                const response = await fetch('/myInfo');
+                const data = await response.json();
+
+                if (response.status === 200) {
+                    document.getElementById('email').innerText = data.email;
+
+                    if (data.accountType === 'volonteer') {
+                        displayVolunteerForm(data);
+                    } else if (data.accountType === 'shelter') {
+                        displayShelterForm(data);
+                    }
+                } else {
+                    alert('Failed to load profile data');
+                }
+            } catch (error) {
+                alert('Error fetching profile data');
+            }
+        }
+
+        function displayVolunteerForm(data) {
+            const formHTML = `
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" value="${data.name}" required>
+
+                <label for="surname">Surname:</label>
+                <input type="text" id="surname" name="surname" value="${data.surname}">
+
+                <label for="address">Address:</label>
+                <input type="text" id="address" name="address" value="${data.address}" required>
+
+                <label for="phone">Phone:</label>
+                <input type="text" id="phone" name="phone" value="${data.phone}" required>
+            `;
+            document.getElementById('profileForm').innerHTML = formHTML + `<button type="button" onclick="saveProfile()">Save</button>`;
+        }
+
+        function displayShelterForm(data) {
+            const formHTML = `
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" value="${data.name}" required>
+
+                <label for="address">Address:</label>
+                <input type="text" id="address" name="address" value="${data.address}" required>
+
+                <label for="phone">Phone:</label>
+                <input type="text" id="phone" name="phone" value="${data.phone}" required>
+
+                <label for="contact_name">Contact Name:</label>
+                <input type="text" id="contact_name" name="contact_name" value="${data.contact_name}">
+
+                <label for="contact_surname">Contact Surname:</label>
+                <input type="text" id="contact_surname" name="contact_surname" value="${data.contact_surname}">
+
+                <label for="contact_position">Contact Position:</label>
+                <input type="text" id="contact_position" name="contact_position" value="${data.contact_position}">
+
+                <label for="website">Website:</label>
+                <input type="text" id="website" name="website" value="${data.website}">
+
+                <label for="social_media">Social Media:</label>
+                <input type="text" id="social_media" name="social_media" value="${data.social_media}">
+            `;
+            document.getElementById('profileForm').innerHTML = formHTML + `<button type="button" onclick="saveProfile()">Save</button>`;
+        }
+
+        async function saveProfile() {
+            const formData = {};
+            formData.email = document.getElementById('email').innerText;
+
+            formData.name = document.getElementById('name').value;
+            formData.address = document.getElementById('address').value;
+            formData.phone = document.getElementById('phone').value;
+
+            if (document.getElementById('contact_name')) {
+                formData.contact_name = document.getElementById('contact_name').value;
+                formData.contact_surname = document.getElementById('contact_surname').value;
+                formData.contact_position = document.getElementById('contact_position').value;
+                formData.website = document.getElementById('website').value;
+                formData.social_media = document.getElementById('social_media').value;
+            } else {
+                formData.surname = document.getElementById('surname').value;
+            }
+
+            try {
+                const response = await fetch('/editProfile', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.status === 200) {
+                    alert('Profile updated successfully!');
+                } else {
+                    alert('Failed to update profile');
+                }
+            } catch (error) {
+                alert('Error saving profile');
+            }
+        }
+
+        window.onload = fetchProfile;
+    </script>
+
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f7f9fc;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-top: 20px;
+        }
+
+        
+
+        #profileForm {
+            margin: 30px auto;
+            max-width: 600px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #profileForm label {
+            display: block;
+            margin-top: 15px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        #profileForm input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        #profileForm button {
+            padding: 10px 20px;
+            width: 100%;
+            background-color: #6c63ff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #profileForm button:hover {
+            background-color: #5a52e6;
+        }
+
+        .email-container {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .email-container strong {
+            color: #007BFF;
+            font-weight: bold;
+        }
+
+        .email-container span {
+            color: #555;
+            font-weight: normal;
+            font-style: italic;
+        }
+
+        #profileForm .back-btn {
+            background-color: #f1f1f1;
+            color: #333;
+            font-size: 16px;
+            margin-top: 20px;
+            border: none;
+        }
+
+        #profileForm .back-btn:hover {
+            background-color: #ddd;
+        }
+
+        #profileForm p {
+            color: #555;
+            font-size: 14px;
+        }
+
+
+       
+
+       
+
+
+
+
+        .footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    padding: 20px;
+    background-color: #ffffff;
+    border-top: 1px solid #ddd;
+    z-index: 10;
+}
+
+.footer p {
+    font-size: 14px;
+    color: #555;
+    margin: 0;
+}
+
+        #navLinks {
+    display: flex;
+    justify-content: center;   /* Centers the navigation items horizontally */
+    align-items: center;       /* Vertically aligns the items in the center */
+    background-color: #333;    /* Dark background for contrast */
+    padding: 15px 20px;        /* Add padding for spacing */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
+    margin-bottom: 30px;       /* Space below the navbar */
+}
+
+#navLinks a {
+    color: #fff;               /* White color for the links */
+    text-decoration: none;     /* Remove underline */
+    margin: 0 15px;            /* Spacing between the links */
+    font-size: 16px;           /* Set font size */
+    font-weight: 500;          /* Medium weight for readability */
+    transition: all 0.3s ease; /* Smooth transition for hover effect */
+    padding: 8px 15px;         /* Add some padding inside the links for better clickable area */
+    border-radius: 5px;        /* Rounded corners for each link */
+}
+
+#navLinks a:hover {
+    background-color: #5a52e6; /* Blue background on hover */
+    color: #fff;               /* White text color on hover */
+    transform: translateY(-2px); /* Slight lift effect on hover */
+}
+
+#navLinks .active {
+    background-color: #6c63ff; /* Highlight active page with green */
+    color: white;              /* White text for active link */
+    font-weight: 600;          /* Bold font for active link */
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.5); /* Subtle shadow for active state */
+}
+
+#navLinks a:focus {
+    outline: none; /* Remove default focus outline */
+}
+    </style>
+</head>
+
+<body>
+    <div id="navLinks">
+        <a href="create-offer.html">Create Offer</a>
+        <a href="my-offers.html">My Posts</a>
+        <a href="liked.html">Liked</a>
+        <a href="market.html" >Market</a> <!-- Active class for current page -->
+        <a href="profile.html" class="active">Profile</a>
+    </div>
+
+    <h1>Profile</h1>
+
+    <p class="email-container"><strong>Email: </strong><span id="email"></span></p>
+
+    <div id="profileForm">
+        <!-- Form will be dynamically filled based on account type -->
+    </div>
+
+    <div class="footer">
+        <p>&copy; 2025 MarketPlace. All rights reserved.</p>
+    </div>
+
+</body>
+
+</html>
