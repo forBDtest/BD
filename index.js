@@ -263,7 +263,7 @@ app.post('/editOffer/:id', processData('photo', 'specie', 'sex', 'age', 'colour'
 
 
 //delete your own offers by id
-app.get('/deleteOffer/:id', checkLogin, async (req, res) => {
+app.delete('/myOffers/:id', checkLogin, async (req, res) => {
     const pathType = req.accountType == 'shelter' ? 's' : 'v';
     if (isNaN(parseInt(req.params.id))) return res.status(400).send('Is that ID?! HUH, i didnt know :o');
     const userPath = `${pathType}Post/`+req.params.id; 
