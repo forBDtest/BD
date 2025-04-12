@@ -111,7 +111,7 @@ function processData(...fields) {
                 return res.status(400).send(`Field "${field}" is required`);
             }
 
-            // req.body[field] = encodeData(value);
+            req.body[field] = value+'';
         }
 
         next();
@@ -205,7 +205,7 @@ app.get('/myData', checkLogin, async (req, res) => {
 
 
 //create offer based on user account type
-app.post('/post', processData('photo', 'specie', 'sex', 'age', 'colour', 'health', 'status', 'description'), checkLogin, async (req, res) => {
+app.post('/postOffer', processData('photo', 'specie', 'sex', 'age', 'colour', 'health', 'status', 'description'), checkLogin, async (req, res) => {
     let { photo, specie, sex, age, colour, health, status, description } = req.body;
     if (isNaN(parseInt(age)))  res.status(400).send('Age must be a number');
     const pathType = req.accountType == 'shelter' ? 's' : 'v';
@@ -221,36 +221,6 @@ app.post('/post', processData('photo', 'specie', 'sex', 'age', 'colour', 'health
     }
 });
 
-
-
-//marketplace with filters
-app.get('/market/filter', checkLogin, async (req, res) => {
-    const pathType = req.accountType == 'shelter' ? 'v' : 's';
-    const userPath = `${pathType}Post`; 
-    if (!req.query.key && !req.query.value) return res.status(400).send('Wrong query proveded');
-    if (!["colour", "species", "age", "sex", "health", "status"].includes(req.query.key)) return res.status(400).send('filtering supported by colour, species, age, sex, health, status');
-    const result = await readFilteredData(userPath,req.query.key, req.query.value);
-    if (result != 0) {
-        res.status(200).send(result);
-    } else {
-        res.status(404).send('Not found');
-    }
-});
-
-
-//browse marketplace based on your accont type
-app.get('/market', checkLogin, async (req, res) => {
-    const pathType = req.accountType == 'shelter' ? 'v' : 's';
-    const userPath = `${pathType}Post`; 
-    const result = await readData(userPath);
-    if (result != 0) {
-        res.status(200).send(result);
-    } else {
-        res.status(404).send('Not found');
-    }
-});
-
-
 //get list of your own offers
 app.get('/myOffers', checkLogin, async (req, res) => {
     const pathType = req.accountType == 'shelter' ? 's' : 'v';
@@ -259,9 +229,29 @@ app.get('/myOffers', checkLogin, async (req, res) => {
     if (result != 0) {
         res.status(200).send(result);
     } else {
-        res.status(404).send('Not found');
+        res.status(200).send({});
     }
 });
+
+//edit offer
+app.post('/editOffer/:id', processData('photo', 'specie', 'sex', 'age', 'colour', 'health', 'status', 'description'), checkLogin, async (req, res) => {
+    if (isNaN(parseInt(req.params.id))) return res.status(400).send('Is that ID?! HUH, i didnt know :o');
+    let { photo, specie, sex, age, colour, health, status, description } = req.body;
+    if (isNaN(parseInt(age)))  res.status(400).send('Age must be a number');
+    const pathType = req.accountType == 'shelter' ? 's' : 'v';
+    const id = parseInt(req.params.id);
+    const userPath = `${pathType}Post/${id}`; 
+    const check = await readData(userPath);
+    if (!check) return res.status(400).send('No such pet');
+    if (check.author != req.email) return res.status(403).send('Its not your offer');
+    const result = await setData(userPath, {photo, specie, sex, age, colour, health, status, description, author: req.email});
+    if (result) {
+        res.status(200).send('Pet updated successfully');
+    } else {
+        res.status(500).send('Error updating pet');
+    }
+});
+
 
 //delete your own offers by id
 app.get('/deleteOffer/:id', checkLogin, async (req, res) => {
@@ -277,6 +267,36 @@ app.get('/deleteOffer/:id', checkLogin, async (req, res) => {
         res.status(404).send('Not found');
     }
 });
+
+//browse marketplace based on your accont type
+app.get('/market', checkLogin, async (req, res) => {
+    const pathType = req.accountType == 'shelter' ? 'v' : 's';
+    const userPath = `${pathType}Post`; 
+    const result = await readData(userPath);
+    if (result != 0) {
+        res.status(200).send(result);
+    } else {
+        res.status(200).send({});
+    }
+});
+
+//marketplace with filters
+app.get('/market/filter', checkLogin, async (req, res) => {
+    const pathType = req.accountType == 'shelter' ? 'v' : 's';
+    const userPath = `${pathType}Post`; 
+    if (!req.query.key && !req.query.value) return res.status(400).send('Wrong query proveded');
+    if (!["colour", "species", "age", "sex", "health", "status"].includes(req.query.key)) return res.status(400).send('filtering supported by colour, species, age, sex, health, status');
+    const result = await readFilteredData(userPath,req.query.key, req.query.value);
+    if (result != 0) {
+        res.status(200).send(result);
+    } else {
+        res.status(404).send({});
+    }
+});
+
+
+
+
 
 
 //--------------------------
