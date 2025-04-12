@@ -9,15 +9,15 @@ import cookieParser from 'cookie-parser';
 const app = express();
 const port = 3000;
 
-// const corsOptions = {
-//     origin: (origin, callback) => {
-//       callback(null, true);  // This allows all origins
-//     },
-//     credentials: true,  // Allow cookies and authentication tokens
-//   };
+const corsOptions = {
+    origin: (origin, callback) => {
+      callback(null, true);  // This allows all origins
+    },
+    credentials: true,  // Allow cookies and authentication tokens
+  };
   
-//   app.use(cors(corsOptions));  
-app.use(cors());
+  app.use(cors(corsOptions));  
+// app.use(cors());
   
 app.use(express.json());
 app.use(cookieParser());
@@ -205,7 +205,7 @@ app.post('/login', processData('email', 'password'), async (req, res) => {
 
     const result = await setData('token/' + newToken, { email, accountType: userData.accountType });
     if (result) {
-        res.status(200).send({newToken});
+        res.status(200).send({token:newToken});
     } else {
         res.status(500).send('Error registering user');
     }
