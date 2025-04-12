@@ -158,8 +158,8 @@ app.post('/volonteer/register', processData('email', 'password', 'name', 'surnam
     }
 });
 
-app.post('/shelter/register', processData('email', 'password', 'name', 'surname', 'address', 'phone', 'owner_name', 'owner_surname', 'owner_position', 'website', 'social_media'), async (req, res) => {
-    let { email, password, name, surname, address, phone, owner_name, owner_surname, owner_position, website, social_media } = req.body;
+app.post('/shelter/register', processData('email', 'password', 'name', 'address', 'phone', 'owner_name', 'owner_surname', 'owner_position', 'website', 'social_media'), async (req, res) => {
+    let { email, password, name, address, phone, owner_name, owner_surname, owner_position, website, social_media } = req.body;
 
     const userPath = `user/${encodeData(email)}`;
     const existingUser = await readData(userPath);
@@ -168,7 +168,7 @@ app.post('/shelter/register', processData('email', 'password', 'name', 'surname'
         return res.status(400).send('Email already registered');
     }
 
-    const result = await setData(userPath, { password, name, surname, address, phone, owner_name, owner_surname, owner_position, website, social_media, accountType: "shelter" });
+    const result = await setData(userPath, { password, name, address, phone, owner_name, owner_surname, owner_position, website, social_media, accountType: "shelter" });
     if (result) {
         res.status(200).send('User registered successfully');
     } else {
