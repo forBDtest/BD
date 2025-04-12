@@ -214,7 +214,7 @@ app.get('/myData', checkLogin, async (req, res) => {
 
 
 //create offer based on user account type
-app.post('/postOffer', processData('photo', 'specie', 'sex', 'age', 'colour', 'health', 'status', 'description'), checkLogin, async (req, res) => {
+app.post('/myOffers', processData('photo', 'specie', 'sex', 'age', 'colour', 'health', 'status', 'description'), checkLogin, async (req, res) => {
     let { photo, specie, sex, age, colour, health, status, description } = req.body;
     if (isNaN(parseInt(age)))  res.status(400).send('Age must be a number');
     const pathType = req.accountType == 'shelter' ? 's' : 'v';
