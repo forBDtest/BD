@@ -8,7 +8,16 @@ import cookieParser from 'cookie-parser';
 
 const app = express();
 const port = 3000;
-app.use(cors());
+
+const corsOptions = {
+    origin: (origin, callback) => {
+      callback(null, true);  // This allows all origins
+    },
+    credentials: true,  // Allow cookies and authentication tokens
+  };
+  
+  app.use(cors(corsOptions));  
+  
 app.use(express.json());
 app.use(cookieParser());
 // Your web app's Firebase configuration
