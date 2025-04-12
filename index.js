@@ -205,7 +205,7 @@ app.post('/login', processData('email', 'password'), async (req, res) => {
 
     const result = await setData('token/' + newToken, { email, accountType: userData.accountType });
     if (result) {
-        res.status(200).send(newToken);
+        res.status(200).send({newToken});
     } else {
         res.status(500).send('Error registering user');
     }
