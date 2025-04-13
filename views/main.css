@@ -22,6 +22,15 @@
     text-align: center;
 }
 
+
+@media (max-width: 768px) {
+  .features {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+
 @media (max-width: 500px) {
     #navLinks {
         flex-direction: column;
