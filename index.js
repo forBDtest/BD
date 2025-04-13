@@ -648,7 +648,7 @@ async function checkID(req,res,next) {
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-app.post('/myOffers/image/:id',checkLogin,checkID, upload.single('image'), (req, res) => {
+app.post('/myOffers/image/:id',checkLogin,checkID, upload.single('photo'), (req, res) => {
     const { id } = req.params;
     const imageBuffer = req.file?.buffer;
 
