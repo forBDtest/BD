@@ -257,7 +257,7 @@ app.get('/myInfo', checkLogin, async (req, res) => {
 
 
 app.post('/editProfile', checkLogin, async (req, res) => {
-    const userPath = 'user/'+req.email;
+    const userPath = 'user/'+encodeData(req.email);
     if (req.accountType == 'volonteer') {
         processData('name', 'surname', 'address', 'phone');
     let { name, surname, address, phone } = req.body;
@@ -417,12 +417,12 @@ app.get('/market/filter', checkLogin, async (req, res) => {
 
 //add to favourited
 app.post('/liked', processData('id'), checkLogin, async (req, res) => {
-    setData('user/' + req.email + '/liked/' + req.body.id, true);
+    setData('user/' + encodeData(req.email) + '/liked/' + req.body.id, true);
     res.status(200).send({message:'Added'});
 });
 //remove
 app.delete('/liked', processData('id'), checkLogin, async (req, res) => {
-    setData('user/' + req.email + '/liked/' + req.body.id, null);
+    setData('user/' + encodeData(req.email) + '/liked/' + req.body.id, null);
     res.status(200).send({message:'Deteted'});
 });
 
@@ -430,7 +430,8 @@ app.delete('/liked', processData('id'), checkLogin, async (req, res) => {
 
 //show favourited offers
 app.get('/liked', checkLogin, async (req, res) => {
-    const ids = await readData('user/' + req.email + '/liked') || {};
+    console.log(encodeData(req.email));
+    const ids = await readData('user/' + encodeData(req.email) + '/liked') || {};
     console.log(ids);
     const pathType = req.accountType == 'shelter' ? 's' : 'v';
     const checks = Object.keys(ids).map(async (id) => {
@@ -452,7 +453,7 @@ app.get('/liked', checkLogin, async (req, res) => {
     if (correct) {
         console.log('all are ok');
     } else {
-        setData('user/'+req.email+'/liked/',validItems);
+        setData('user/'+encodeData(req.email)+'/liked/',validItems);
         console.log('Deleted keys');
     }
     res.status(200).send(response);
@@ -461,7 +462,7 @@ app.get('/liked', checkLogin, async (req, res) => {
 
 
 app.get('/likedIDs', checkLogin, async (req, res) => {
-    const ids = await readData('user/' + req.email + '/liked') || {};
+    const ids = await readData('user/' + encodeData(req.email) + '/liked') || {};
 res.status(200).send(ids);
 });
 
