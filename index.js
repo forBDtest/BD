@@ -57,7 +57,6 @@ async function readData(path) {
         if (snapshot.exists()) {
             return snapshot.val(); // Return the data if it exists
         } else {
-            console.log('No data available');
             return 0; // Return 0 if no data is available
         }
     } catch (error) {
@@ -169,7 +168,6 @@ async function checkLogin(req, res, next) {
 
 //--------------------------
 app.post('/volonteer/register', processData('email', 'password', 'name', 'surname', 'address', 'phone'), async (req, res) => {
-    console.log('Registering user...');
     let { email, password, name, surname, address, phone } = req.body;
 
     const userPath = `user/${encodeData(email)}`;
@@ -425,9 +423,7 @@ app.delete('/liked', processData('id'), checkLogin, async (req, res) => {
 
 //show favourited offers
 app.get('/liked', checkLogin, async (req, res) => {
-    console.log(encodeData(req.email));
     const ids = await readData('user/' + encodeData(req.email) + '/liked') || {};
-    console.log(ids);
     const pathType = req.accountType == 'shelter' ? 's' : 'v';
     const checks = Object.keys(ids).map(async (id) => {
         const mainKeySnap = await readData(pathType + 'Post/' + id);
@@ -446,10 +442,9 @@ app.get('/liked', checkLogin, async (req, res) => {
     });
 
     if (correct) {
-        console.log('all are ok');
+        //
     } else {
         setData('user/'+encodeData(req.email)+'/liked/',validItems);
-        console.log('Deleted keys');
     }
     res.status(200).send(response);
 });
@@ -634,7 +629,6 @@ async function checkID(req,res,next) {
     req.pathType = pathType;
     const id = req.params.id;
     const userPath = `${pathType}Post/${id}`;
-    console.log(userPath);
     const check = await readData(userPath);
     if (!check) return res.status(400).send({error:'No such pet'});
     if (check.author != req.email) return res.status(403).send({error:'Its not your offer'});
@@ -657,7 +651,6 @@ app.post('/myOffers/image/:id',checkLogin,checkID, upload.single('photo'), (req,
     }
 
     const dirPath = path.join(__dirname, 'images', req.pathType+'Post');
-    console.log(req.pathType);
     const filePath = path.join(dirPath, `${id}.png`);
 
     // Ensure the directory exists
@@ -790,7 +783,7 @@ app.get('/userImage', checkLogin, (req, res) => {
 app.get('/userImage/:email',async (req, res) => {
     const result = await readData('user/' + encodeData(req.params.email));
     if (result != 0) {
-    const filePath = path.join(__dirname, 'images', 'user', `${encodeURIComponent(encodeURIComponent(req.params.email))}.png`);
+    const filePath = path.join(__dirname, 'images', 'user', `${encodeURIComponent(req.params.email)}.png`);
     const filePath2 = path.join(__dirname, 'images', `defaultUser.png`);
 
     fs.access(filePath, fs.constants.F_OK, (err) => {
