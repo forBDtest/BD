@@ -648,7 +648,7 @@ async function checkID(req,res,next) {
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-app.post('/postImage/:id',checkLogin,checkID, upload.single('image'), (req, res) => {
+app.post('/offerImage/:id',checkLogin,checkID, upload.single('image'), (req, res) => {
     const { id } = req.params;
     const imageBuffer = req.file?.buffer;
 
@@ -679,23 +679,84 @@ app.post('/postImage/:id',checkLogin,checkID, upload.single('image'), (req, res)
 });
 
 
-app.get('/getImage/:id', checkLogin, (req, res) => {
+app.get('/offerImage/:id', checkLogin, (req, res) => {
     const { id } = req.params;
     const pathType = req.accountType == 'shelter' ? 's' : 'v';
     const filePath = path.join(__dirname, 'images', pathType+'Post', `${id}.png`);
+    const filePath2 = path.join(__dirname, 'images', `default.png`);
 
     fs.access(filePath, fs.constants.F_OK, (err) => {
         if (err) {
-            return res.status(404).send({ error: 'Image not found' });
+            fs.access(filePath2, fs.constants.F_OK, (err2) => {
+                if (err2) {
+                    return res.status(404).send({ error: 'Default image not found' });
+                } else {
+                    return res.sendFile(filePath2);
+                }
+        
+            });
+        } else {
+            return res.sendFile(filePath);
         }
 
-        res.sendFile(filePath);
     });
 });
 
 
 
 
+
+
+app.post('/userImage/:id',checkLogin, upload.single('image'), (req, res) => {
+    const imageBuffer = req.file?.buffer;
+
+    if (!imageBuffer) {
+        return res.status(400).send({ error: 'No image uploaded' });
+    }
+
+    const dirPath = path.join(__dirname, 'images', 'user');
+    const filePath = path.join(dirPath, `${encodeURIComponent(req.email)}.png`);
+
+    // Ensure the directory exists
+    fs.mkdir(dirPath, { recursive: true }, (mkdirErr) => {
+        if (mkdirErr) {
+            console.error('Failed to create directory:', mkdirErr);
+            return res.status(500).send({ error: 'Failed to create directory' });
+        }
+
+        fs.writeFile(filePath, imageBuffer, (writeErr) => {
+            if (writeErr) {
+                console.error('Error writing file:', writeErr);
+                return res.status(500).send({ error: 'Error saving image' });
+            }
+
+            res.send({ message: 'Image saved successfully' });
+        });
+    });
+});
+
+
+
+app.get('/userImage/:id', checkLogin, (req, res) => {
+    const filePath = path.join(__dirname, 'images', 'user', `${encodeURIComponent(req.email)}.png`);
+    const filePath2 = path.join(__dirname, 'images', `defaultUser.png`);
+
+    fs.access(filePath, fs.constants.F_OK, (err) => {
+        if (err) {
+            fs.access(filePath2, fs.constants.F_OK, (err2) => {
+                if (err2) {
+                    return res.status(404).send({ error: 'Default image not found' });
+                } else {
+                    return res.sendFile(filePath2);
+                }
+        
+            });
+        } else {
+            return res.sendFile(filePath);
+        }
+
+    });
+});
 
 
 
