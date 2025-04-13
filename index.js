@@ -238,6 +238,34 @@ app.get('/myInfo', checkLogin, async (req, res) => {
 
 
 
+
+app.post('/editProfile', checkLogin, async (req, res) => {
+    const userPath = 'user/'+req.email;
+    if (req.accountType == 'volonteer') {
+        processData('name', 'surname', 'address', 'phone');
+    let { name, surname, address, phone } = req.body;
+    const result = await updateData(userPath, { name, surname, address, phone });
+    if (result) {
+        res.status(200).send({message:'User updated successfully'});
+    } else {
+        res.status(500).send({error:'Error updating user'});
+    }
+
+    } else {
+    processData('name', 'address', 'phone', 'contact_name', 'contact_surname', 'contact_position', 'website', 'social_media');
+    let { name, address, phone, contact_name, contact_surname, contact_position, website, social_media } = req.body;
+    const result = await updateData(userPath, { name, address, phone, contact_name, contact_surname, contact_position, website, social_media});
+    if (result) {
+        res.status(200).send({message:'User updated successfully'});
+    } else {
+        res.status(500).send({error:'Error updating user'});
+    }
+}
+});
+
+
+
+
 //user profile data
 app.get('/userInfo/:email', async (req, res) => {
     const result = await readData('user/' + encodeData(req.params.email));
@@ -264,7 +292,7 @@ app.post('/myOffers', processData('photo', 'specie', 'sex', 'age', 'colour', 'he
     const pathType = req.accountType == 'shelter' ? 's' : 'v';
     const id = await readData(pathType + "id");
     setData(pathType + "id", id + 1);
-    const userPath = `${pathType}Post/${id}`;
+    const userPath = `${pathType}Post/id${id}`;
 
     const result = await setData(userPath, { photo, specie, sex, age, colour, health, status, description, author: req.email });
     if (result) {
@@ -293,7 +321,7 @@ app.post('/editOffer/:id', processData('photo', 'specie', 'sex', 'age', 'colour'
     if (isNaN(parseInt(age))) res.status(400).send({error:'Age must be a number'});
     const pathType = req.accountType == 'shelter' ? 's' : 'v';
     const id = parseInt(req.params.id);
-    const userPath = `${pathType}Post/${id}`;
+    const userPath = `${pathType}Post/id${id}`;
     const check = await readData(userPath);
     if (!check) return res.status(400).send({error:'No such pet'});
     if (check.author != req.email) return res.status(403).send({error:'Its not your offer'});
@@ -467,6 +495,9 @@ app.get('/market.html', (req, res) => {
 app.get('/home.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'home.html'));
 });
+app.get('/check.js', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'check.js'));
+});
 // Serve profile page
 app.get('/profile.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'profile.html'));
@@ -507,7 +538,13 @@ app.get('/user.html', (req, res) => {
 });
 
 
+app.get('/logout.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'logout.html'));
+});
 
+app.get('/bg.png', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'bg.png'));
+});
 
 
 

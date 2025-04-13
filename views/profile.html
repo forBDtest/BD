@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+    <script src="check.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile</title>
@@ -20,10 +21,10 @@
                         displayShelterForm(data);
                     }
                 } else {
-                    alert('Failed to load profile data');
+                    console.log('Failed to load profile data');
                 }
             } catch (error) {
-                alert('Error fetching profile data');
+                console.log('Error fetching profile data');
             }
         }
 
@@ -101,10 +102,10 @@
                 if (response.status === 200) {
                     alert('Profile updated successfully!');
                 } else {
-                    alert('Failed to update profile');
+                    console.log('Failed to update profile');
                 }
             } catch (error) {
-                alert('Error saving profile');
+                console.log('Error saving profile');
             }
         }
 
@@ -225,15 +226,23 @@
     z-index: 10;
 }
 
+
+
+.footer2 {
+    width: 100%;
+    height: 50px;
+}
+
 .footer p {
     font-size: 14px;
     color: #555;
     margin: 0;
 }
 
+
         #navLinks {
     display: flex;
-    justify-content: center;   /* Centers the navigation items horizontally */
+    justify-content: center;   
     align-items: center;       /* Vertically aligns the items in the center */
     background-color: #333;    /* Dark background for contrast */
     padding: 15px 20px;        /* Add padding for spacing */
@@ -288,9 +297,9 @@
         <!-- Form will be dynamically filled based on account type -->
     </div>
 
-    <div class="footer">
-        <p>&copy; 2025 MarketPlace. All rights reserved.</p>
-    </div>
+    <div class="footer2"></div>
+  <div class="footer">
+    <p>&copy; 2025 MarketPlace. All rights reserved.</p>
 
 </body>
 
