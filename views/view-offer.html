@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Offer</title>
+    <script>
+
+function viewUser(email) {
+            window.location.href = `user.html?email=${email}`;
+        }
+        async function fetchOfferDetails() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const offerId = urlParams.get('id');
+
+            try {
+                const response = await fetch(`/getOffer/${offerId}`);
+                const data = await response.json();
+
+                if (response.status === 200) {
+                    displayOfferDetails(data);
+                } else {
+                    console.cog('Failed to load offer data');
+                }
+            } catch (error) {
+                alert('Error fetching offer data');
+            }
+        }
+
+        function displayOfferDetails(data) {
+            document.getElementById('offerPhoto').src = data.photo;
+            document.getElementById('offerAge').innerText = data.age;
+            document.getElementById('offerAuthor').innerText = data.author;
+            document.getElementById('offerColour').innerText = data.colour;
+            document.getElementById('offerDescription').innerText = data.description;
+            document.getElementById('offerHealth').innerText = data.health;
+            document.getElementById('offerSex').innerText = data.sex;
+            document.getElementById('offerSpecie').innerText = data.specie;
+            document.getElementById('offerStatus').innerText = data.status;
+            document.getElementById('viewBtn').onclick = () => viewUser(data.author);
+          }
+
+        window.onload = fetchOfferDetails;
+    </script>
+
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f9fc;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        .offer-details {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        .offer-photo {
+            flex: 1;
+            max-width: 500px;
+            margin-right: 20px;
+        }
+
+        .offer-photo img {
+            width: 100%;
+            border-radius: 8px;
+        }
+
+        .offer-info {
+            flex: 2;
+            max-width: 600px;
+        }
+
+        .offer-info h2 {
+            color: #6c63ff;
+        }
+
+        .offer-info p {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .offer-info p strong {
+            color: #333;
+        }
+
+        @media screen and (max-width: 768px) {
+            .offer-details {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .offer-photo {
+                max-width: 100%;
+                margin-bottom: 20px;
+            }
+
+            .offer-info {
+                max-width: 100%;
+            }
+
+            .offer-info h2 {
+                font-size: 20px;
+            }
+        }
+
+
+        .offer-info button {
+  background-color: #6c63ff;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-size: 16px;
+  margin-top: 10px;
+}
+
+.offer-info button:hover {
+  background-color: #5a52e6;
+}
+
+.footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    padding: 20px;
+    background-color: #ffffff;
+    border-top: 1px solid #ddd;
+    z-index: 10;
+}
+
+
+
+.footer2 {
+    width: 100%;
+    height: 50px;
+}
+
+.footer p {
+    font-size: 14px;
+    color: #555;
+    margin: 0;
+}
+
+
+        #navLinks {
+    display: flex;
+    justify-content: center;   /* Centers the navigation items horizontally */
+    align-items: center;       /* Vertically aligns the items in the center */
+    background-color: #333;    /* Dark background for contrast */
+    padding: 15px 20px;        /* Add padding for spacing */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
+    margin-bottom: 30px;       /* Space below the navbar */
+}
+
+#navLinks a {
+    color: #fff;               /* White color for the links */
+    text-decoration: none;     /* Remove underline */
+    margin: 0 15px;            /* Spacing between the links */
+    font-size: 16px;           /* Set font size */
+    font-weight: 500;          /* Medium weight for readability */
+    transition: all 0.3s ease; /* Smooth transition for hover effect */
+    padding: 8px 15px;         /* Add some padding inside the links for better clickable area */
+    border-radius: 5px;        /* Rounded corners for each link */
+}
+
+#navLinks a:hover {
+    background-color: #5a52e6; /* Blue background on hover */
+    color: #fff;               /* White text color on hover */
+    transform: translateY(-2px); /* Slight lift effect on hover */
+}
+
+#navLinks .active {
+    background-color: #6c63ff; /* Highlight active page with green */
+    color: white;              /* White text for active link */
+    font-weight: 600;          /* Bold font for active link */
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.5); /* Subtle shadow for active state */
+}
+
+#navLinks a:focus {
+    outline: none; /* Remove default focus outline */
+}
+    </style>
+</head>
+
+<body>
+
+  <div id="navLinks">
+    <a href="home.html">Home</a>
+    <a href="create-offer.html">Create Offer</a>
+        <a href="my-offers.html">My Posts</a>
+        <a href="liked.html">Liked</a>
+        <a href="market.html" class="active">Market</a> <!-- Active class for current page -->
+        <a href="profile.html">Profile</a>
+    </div>
+
+    <div class="container">
+        <div class="offer-details">
+            <div class="offer-photo">
+                <img id="offerPhoto" src="" alt="Offer Photo">
+            </div>
+            <div class="offer-info">
+                <h2>Offer Details</h2>
+                <p><strong>Age:</strong> <span id="offerAge"></span></p>
+                <p><strong>Author:</strong> <span id="offerAuthor"></span></p>
+                <button id="viewBtn">View profile</button>
+                <p><strong>Colour:</strong> <span id="offerColour"></span></p>
+                <p><strong>Description:</strong> <span id="offerDescription"></span></p>
+                <p><strong>Health:</strong> <span id="offerHealth"></span></p>
+                <p><strong>Sex:</strong> <span id="offerSex"></span></p>
+                <p><strong>Specie:</strong> <span id="offerSpecie"></span></p>
+                <p><strong>Status:</strong> <span id="offerStatus"></span></p>
+            </div>
+        </div>
+    </div>
+    <div class="footer2"></div>
+    <div class="footer">
+      <p>&copy; 2025 MarketPlace. All rights reserved.</p>
+</body>
+
+</html>

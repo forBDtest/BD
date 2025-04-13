@@ -105,12 +105,18 @@
     z-index: 10;
 }
 
+
+
+.footer2 {
+    width: 100%;
+    height: 50px;
+}
+
 .footer p {
     font-size: 14px;
     color: #555;
     margin: 0;
 }
-
 
 
         #navLinks {
@@ -152,6 +158,7 @@
 }
 
     </style>
+    <script src="alerts.js"></script>
     <script>
         // Function to create a new element and append it to the market container
         function createMarketItem(item) {
@@ -166,7 +173,7 @@
                 <p><strong>Health:</strong> ${item.health}</p>
                 <p><strong>Description:</strong> ${item.description}</p>
                 <button onclick="viewOffer('${item.id}')">View</button>
-                <button onclick="toggleLike('${item.id}')">Like</button>
+                <button onclick="toggleLike('${item.id}')">${item.liked ? 'Unlike':'Like'}</button>
             `;
             marketContainer.appendChild(itemDiv);
         }
@@ -176,30 +183,33 @@
             try {
                 const response = await fetch('/market');
                 const marketData = await response.json();
+                const likedFetch = await fetch('/likedIDs');
+                const liked = await likedFetch.json();
                 if (Object.keys(marketData).length != 0) {
                     console.log(marketData);
 
                     if (response.status === 200) {
                         Object.entries(marketData).forEach(([key, item]) => {
                             item.id = key;
+                            item.liked = Object.keys(liked).includes(key);
                             createMarketItem(item);
                         });
                     } else {
-                        alert('Failed to load market data');
+                        console.error('Failed to load market data');
                     }
                 }
             } catch (error) {
-                alert('Error fetching market data' + error);
+                console.error('Error fetching market data' + error);
             }
         }
-
         // Function to view the offer (redirect to view-offer.html with offer id)
         function viewOffer(id) {
             window.location.href = `view-offer.html?id=${id}`;
         }
-
+        
         // Function to toggle the "like" status for a market item
         function toggleLike(id) {
+            // showAlert('123');
             const button = document.querySelector(`button[onclick="toggleLike('${id}')"]`);
             if (button.innerText === 'Like') {
                 button.innerText = 'Unlike';
@@ -250,7 +260,8 @@
 <body>
     
     <div id="navLinks">
-        <a href="create-offer.html">Create Offer</a>
+    <a href="home.html">Home</a>
+    <a href="create-offer.html">Create Offer</a>
         <a href="my-offers.html">My Posts</a>
         <a href="liked.html">Liked</a>
         <a href="market.html" class="active">Market</a> <!-- Active class for current page -->
@@ -263,9 +274,9 @@
         <!-- Market items will be appended here dynamically -->
     </div>
 
-    <div class="footer">
-        <p>&copy; 2025 MarketPlace. All rights reserved.</p>
-    </div>
+    <div class="footer2"></div>
+  <div class="footer">
+    <p>&copy; 2025 MarketPlace. All rights reserved.</p>
 </body>
 
 </html>

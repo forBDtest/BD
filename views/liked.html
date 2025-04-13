@@ -1,187 +1,213 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Liked Offers</title>
-  <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      background-color: #f4f7fc;
-      margin: 0;
-      padding: 0;
-    }
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Liked Offers</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7fc;
+            margin: 0;
+            padding: 0;
+        }
 
-    nav {
-      margin: 15px;
-      text-align: center;
-      background-color: #333;
-      padding: 10px 0;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
+        nav {
+            margin: 15px;
+            text-align: center;
+            background-color: #333;
+            padding: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
 
-    nav a {
-      margin: 0 15px;
-      text-decoration: none;
-      font-weight: 600;
-      color: #fff;
-      font-size: 16px;
-      transition: color 0.3s ease;
-    }
+        nav a {
+            margin: 0 15px;
+            text-decoration: none;
+            font-weight: 600;
+            color: #fff;
+            font-size: 16px;
+            transition: color 0.3s ease;
+        }
 
-    nav a:hover {
-      color: #6c63ff;
-    }
+        nav a:hover {
+            color: #6c63ff;
+        }
 
-    h1 {
-      text-align: center;
-      padding: 20px 0;
-      color: #333;
-      font-size: 24px;
-    }
+        h1 {
+            text-align: center;
+            padding: 20px 0;
+            color: #333;
+            font-size: 24px;
+        }
 
-    #offers {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 20px;
-      margin: 20px;
-    }
+        #offers {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px;
+        }
 
-    .card {
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      padding: 15px;
-      width: 280px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      background-color: #fff;
-      text-align: center;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
+        .card {
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            padding: 15px;
+            width: 280px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
 
-    .card:hover {
-      transform: scale(1.05);
-      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
-    }
+        .card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        }
 
-    .card img {
-      max-width: 100%;
-      height: 150px;
-      object-fit: cover;
-      border-radius: 5px;
-    }
+        .card img {
+            max-width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
 
-    .card h3 {
-      font-size: 18px;
-      color: #333;
-      margin: 10px 0;
-    }
+        .card h3 {
+            font-size: 18px;
+            color: #333;
+            margin: 10px 0;
+        }
 
-    .card p {
-      color: #555;
-      font-size: 14px;
-      margin: 5px 0;
-    }
+        .card p {
+            color: #555;
+            font-size: 14px;
+            margin: 5px 0;
+        }
 
-    .owner-link {
-      color: #6c63ff;
-      cursor: pointer;
-      text-decoration: underline;
-    }
+        .owner-link {
+            color: #6c63ff;
+            cursor: pointer;
+            text-decoration: underline;
+        }
 
-    .card button {
-      padding: 8px 15px;
-      background-color: #6c63ff;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: background-color 0.3s ease;
-    }
+        .card button {
+            padding: 8px 15px;
+            background-color: #6c63ff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
 
-    .card button:hover {
-      background-color: #5a52e6;
-    }
-
-
-    
+        .card button:hover {
+            background-color: #5a52e6;
+        }
 
 
 
 
-    .footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    text-align: center;
-    padding: 20px;
-    background-color: #ffffff;
-    border-top: 1px solid #ddd;
-    z-index: 10;
-}
 
-.footer p {
-    font-size: 14px;
-    color: #555;
-    margin: 0;
-}
+
+
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            padding: 20px;
+            background-color: #ffffff;
+            border-top: 1px solid #ddd;
+            z-index: 10;
+        }
+
+        .footer p {
+            font-size: 14px;
+            color: #555;
+            margin: 0;
+        }
 
 
         #navLinks {
-    display: flex;
-    justify-content: center;   /* Centers the navigation items horizontally */
-    align-items: center;       /* Vertically aligns the items in the center */
-    background-color: #333;    /* Dark background for contrast */
-    padding: 15px 20px;        /* Add padding for spacing */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
-    margin-bottom: 30px;       /* Space below the navbar */
-}
+            display: flex;
+            justify-content: center;
+            /* Centers the navigation items horizontally */
+            align-items: center;
+            /* Vertically aligns the items in the center */
+            background-color: #333;
+            /* Dark background for contrast */
+            padding: 15px 20px;
+            /* Add padding for spacing */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            /* Subtle shadow for depth */
+            margin-bottom: 30px;
+            /* Space below the navbar */
+        }
 
-#navLinks a {
-    color: #fff;               /* White color for the links */
-    text-decoration: none;     /* Remove underline */
-    margin: 0 15px;            /* Spacing between the links */
-    font-size: 16px;           /* Set font size */
-    font-weight: 500;          /* Medium weight for readability */
-    transition: all 0.3s ease; /* Smooth transition for hover effect */
-    padding: 8px 15px;         /* Add some padding inside the links for better clickable area */
-    border-radius: 5px;        /* Rounded corners for each link */
-}
+        #navLinks a {
+            color: #fff;
+            /* White color for the links */
+            text-decoration: none;
+            /* Remove underline */
+            margin: 0 15px;
+            /* Spacing between the links */
+            font-size: 16px;
+            /* Set font size */
+            font-weight: 500;
+            /* Medium weight for readability */
+            transition: all 0.3s ease;
+            /* Smooth transition for hover effect */
+            padding: 8px 15px;
+            /* Add some padding inside the links for better clickable area */
+            border-radius: 5px;
+            /* Rounded corners for each link */
+        }
 
-#navLinks a:hover {
-    background-color: #5a52e6; /* Blue background on hover */
-    color: #fff;               /* White text color on hover */
-    transform: translateY(-2px); /* Slight lift effect on hover */
-}
+        #navLinks a:hover {
+            background-color: #5a52e6;
+            /* Blue background on hover */
+            color: #fff;
+            /* White text color on hover */
+            transform: translateY(-2px);
+            /* Slight lift effect on hover */
+        }
 
-#navLinks .active {
-    background-color: #6c63ff; /* Highlight active page with green */
-    color: white;              /* White text for active link */
-    font-weight: 600;          /* Bold font for active link */
-    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.5); /* Subtle shadow for active state */
-}
+        #navLinks .active {
+            background-color: #6c63ff;
+            /* Highlight active page with green */
+            color: white;
+            /* White text for active link */
+            font-weight: 600;
+            /* Bold font for active link */
+            box-shadow: 0 2px 8px rgba(0, 123, 255, 0.5);
+            /* Subtle shadow for active state */
+        }
 
-#navLinks a:focus {
-    outline: none; /* Remove default focus outline */
-}
-  </style>
-  <script>
-    async function fetchLiked() {
-      const res = await fetch('/liked');
-      const data = await res.json();
-      const container = document.getElementById('offers');
-      container.innerHTML = '';
+        #navLinks a:focus {
+            outline: none;
+            /* Remove default focus outline */
+        }
+    </style>
+    <script>
+        function viewOffer(id) {
+            window.location.href = `view-offer.html?id=${id}`;
+        }
+        async function fetchLiked() {
+            const res = await fetch('/liked');
+            const data = await res.json();
+            const container = document.getElementById('offers');
+            container.innerHTML = '';
 
-      for (const id in data) {
-        const item = data[id];
+            for (const id in data) {
+                const item = data[id];
 
-        const card = document.createElement('div');
-        card.className = 'card';
+                const card = document.createElement('div');
+                card.className = 'card';
 
-        card.innerHTML = `
+                card.innerHTML = `
           <img src="${item.photo}" alt="Photo"/>
           <h3>${item.specie} (${item.sex})</h3>
           <p><strong>Age:</strong> ${item.age}</p>
@@ -190,43 +216,46 @@
           <p><strong>Status:</strong> ${item.status}</p>
           <p><strong>Description:</strong> ${item.description}</p>
           <p><strong>Author:</strong> <span class="owner-link" data-email="${item.author}">${item.author}</span></p>
-          <button onclick="unlikeOffer('${id}')">💔 Unlike</button>
+          <button onclick="viewOffer('${id}')">View</button>
+          <button onclick="unlikeOffer('${id}')">Unlike</button>
         `;
 
-        container.appendChild(card);
-      }
+                container.appendChild(card);
+            }
 
-      document.querySelectorAll('.owner-link').forEach(link => {
-        link.onclick = () => {
-          const email = link.dataset.email;
-          window.location.href = `user.html?email=${encodeURIComponent(email)}`;
-        };
-      });
-    }
+            document.querySelectorAll('.owner-link').forEach(link => {
+                link.onclick = () => {
+                    const email = link.dataset.email;
+                    window.location.href = `user.html?email=${encodeURIComponent(email)}`;
+                };
+            });
+        }
 
-    async function unlikeOffer(id) {
-      if (!confirm("Are you sure you want to unlike this offer?")) return;
+        async function unlikeOffer(id) {
+            if (!confirm("Are you sure you want to unlike this offer?")) return;
 
-      const res = await fetch('/liked', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: id })
-      });
+            const res = await fetch('/liked', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: id })
+            });
 
-      if (res.status === 200) {
-        alert("Offer unliked.");
-        fetchLiked();
-      } else {
-        const err = await res.text();
-        alert("Error: " + err);
-      }
-    }
+            if (res.status === 200) {
+                alert("Offer unliked.");
+                fetchLiked();
+            } else {
+                const err = await res.text();
+                alert("Error: " + err);
+            }
+        }
 
-    window.onload = fetchLiked;
-  </script>
+        window.onload = fetchLiked;
+    </script>
 </head>
+
 <body>
     <div id="navLinks">
+        <a href="home.html">Home</a>
         <a href="create-offer.html">Create Offer</a>
         <a href="my-offers.html">My Posts</a>
         <a href="liked.html" class="active">Liked</a>
@@ -234,10 +263,11 @@
         <a href="profile.html">Profile</a>
     </div>
 
-  <h1>❤️ Liked Offers</h1>
-  <div id="offers"></div>
-  <div class="footer">
-    <p>&copy; 2025 MarketPlace. All rights reserved.</p>
-</div>
+    <h1>❤️ Liked Offers</h1>
+    <div id="offers"></div>
+    <div class="footer">
+        <p>&copy; 2025 MarketPlace. All rights reserved.</p>
+    </div>
 </body>
+
 </html>

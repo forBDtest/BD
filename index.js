@@ -244,12 +244,11 @@ app.get('/userInfo/:email', async (req, res) => {
     if (result != 0) {
         let formedData;
         if (result.accountType == 'volonteer') {
-            formedData = formData(result, 'name', 'surname', 'address', 'phone');
-        } else {
-            formedData = formData(result, 'name', 'surname', 'address', 'phone', 'contact_name', 'contact_surname', 'contact_position', 'website', 'social_media');
+            formedData = formData(result, 'name', 'surname', 'address', 'phone', 'accountType');
+        } else  {
+            formedData = formData(result, 'name', 'surname', 'address', 'phone', 'contact_name', 'contact_surname', 'contact_position', 'website', 'social_media', 'accountType');
         }
-        formedData.email = req.email;
-        formedData.accountType = req.accountType;
+        formedData.email = req.params.email;
         res.status(200).send(formedData);
     } else {
         res.status(404).send({error:'Not found'});
@@ -416,7 +415,10 @@ app.get('/liked', checkLogin, async (req, res) => {
 
 
 
-
+app.get('/likedIDs', checkLogin, async (req, res) => {
+    const ids = await readData('user/' + req.email + '/liked') || {};
+res.status(200).send(ids);
+});
 
 //---------------------------------------------
 
@@ -453,11 +455,18 @@ app.get('/volonteer-register.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'volonteer-register.html'));
 });
 
+app.get('/alerts.js', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'alerts.js'));
+});
+
 // Serve market page
 app.get('/market.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'market.html'));
 });
 
+app.get('/home.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'home.html'));
+});
 // Serve profile page
 app.get('/profile.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'profile.html'));
@@ -493,7 +502,9 @@ app.get('/edit-offer.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'edit-offer.html'));
 });
 
-
+app.get('/user.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'user.html'));
+});
 
 
 
