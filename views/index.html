@@ -5,30 +5,30 @@
   <title>Test Image Upload / Get</title>
   <style>
     body { font-family: sans-serif; padding: 20px; }
-    input, button { margin: 10px 0; display: block; }
+    input, button { margin: 10px 0; display: block; width: 100%; max-width: 400px; }
     img { max-width: 300px; margin-top: 20px; }
   </style>
 </head>
 <body>
 
   <h2>Upload Image</h2>
-  <input type="text" id="uploadId" placeholder="Enter ID">
+  <input type="text" id="uploadPath" placeholder="Enter full upload path (e.g. /postImage/123)">
   <input type="file" id="uploadFile">
   <button onclick="uploadImage()">Upload</button>
 
   <h2>Get Image</h2>
-  <input type="text" id="getId" placeholder="Enter ID to retrieve">
+  <input type="text" id="getPath" placeholder="Enter full get path (e.g. /getImage/123)">
   <button onclick="getImage()">Get Image</button>
   <img id="preview" src="" alt="Image will appear here">
 
   <script>
     async function uploadImage() {
-      const id = document.getElementById('uploadId').value;
+      const path = document.getElementById('uploadPath').value;
       const fileInput = document.getElementById('uploadFile');
       const file = fileInput.files[0];
 
-      if (!id || !file) {
-        alert('Please provide both ID and image file.');
+      if (!path || !file) {
+        alert('Please provide both request path and image file.');
         return;
       }
 
@@ -36,7 +36,7 @@
       formData.append('image', file);
 
       try {
-        const res = await fetch(`/postImage/${id}`, {
+        const res = await fetch(path, {
           method: 'POST',
           body: formData
         });
@@ -49,12 +49,12 @@
       }
     }
 
-    async function getImage() {
-      const id = document.getElementById('getId').value;
-      if (!id) return alert('Enter an ID');
+    function getImage() {
+      const path = document.getElementById('getPath').value;
+      if (!path) return alert('Enter an image path to get');
 
       const img = document.getElementById('preview');
-      img.src = `/getImage/${id}?t=${Date.now()}`; // cache buster
+      img.src = `${path}?t=${Date.now()}`; // Add cache buster
     }
   </script>
 </body>

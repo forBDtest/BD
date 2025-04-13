@@ -648,7 +648,7 @@ async function checkID(req,res,next) {
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-app.post('/offerImage/:id',checkLogin,checkID, upload.single('image'), (req, res) => {
+app.post('/myOffers/image/:id',checkLogin,checkID, upload.single('image'), (req, res) => {
     const { id } = req.params;
     const imageBuffer = req.file?.buffer;
 
@@ -679,7 +679,7 @@ app.post('/offerImage/:id',checkLogin,checkID, upload.single('image'), (req, res
 });
 
 
-app.get('/offerImage/:id', checkLogin, (req, res) => {
+app.get('/myOffers/image/:id', checkLogin, (req, res) => {
     const { id } = req.params;
     const pathType = req.accountType == 'shelter' ? 's' : 'v';
     const filePath = path.join(__dirname, 'images', pathType+'Post', `${id}.png`);
@@ -703,6 +703,30 @@ app.get('/offerImage/:id', checkLogin, (req, res) => {
 });
 
 
+
+
+app.get('/market/image/:id', checkLogin, (req, res) => {
+    const { id } = req.params;
+    const pathType = req.accountType == 'shelter' ? 'v' : 's';
+    const filePath = path.join(__dirname, 'images', pathType+'Post', `${id}.png`);
+    const filePath2 = path.join(__dirname, 'images', `default.png`);
+
+    fs.access(filePath, fs.constants.F_OK, (err) => {
+        if (err) {
+            fs.access(filePath2, fs.constants.F_OK, (err2) => {
+                if (err2) {
+                    return res.status(404).send({ error: 'Default image not found' });
+                } else {
+                    return res.sendFile(filePath2);
+                }
+        
+            });
+        } else {
+            return res.sendFile(filePath);
+        }
+
+    });
+});
 
 
 
