@@ -731,7 +731,7 @@ app.get('/market/image/:id', checkLogin, (req, res) => {
 
 
 
-app.post('/userImage',checkLogin, upload.single('image'), (req, res) => {
+app.post('/userImage',checkLogin, upload.single('photo'), (req, res) => {
     const imageBuffer = req.file?.buffer;
 
     if (!imageBuffer) {
