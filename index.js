@@ -470,29 +470,29 @@ res.status(200).send(ids);
 
 async function redirect(req, res, next) {
 
-    // Get token from cookie or Authorization header
-    const cookieToken = req.cookies?.token;
-    const headerToken = req.headers.authorization?.split(' ')[1]; // Expecting format: "Bearer <token>"
+    // // Get token from cookie or Authorization header
+    // const cookieToken = req.cookies?.token;
+    // const headerToken = req.headers.authorization?.split(' ')[1]; // Expecting format: "Bearer <token>"
 
-    const token = cookieToken || headerToken;
+    // const token = cookieToken || headerToken;
 
-    if (!token) {
-        return res.redirect('/login.html');
-    }
+    // if (!token) {
+    //     return res.redirect('/login.html');
+    // }
 
-    try {
-        const tokenData = await readData('token/' + token);
-        if (tokenData == 0) {
-            return     res.redirect('/login.html');
+    // try {
+    //     const tokenData = await readData('token/' + token);
+    //     if (tokenData == 0) {
+    //         return     res.redirect('/login.html');
 
-        }
+    //     }
 
-        req.email = tokenData.email;
-        req.accountType = tokenData.accountType;
-        next();
-    } catch (err) {
-        res.redirect('/login.html');
-    }
+    //     req.email = tokenData.email;
+    //     req.accountType = tokenData.accountType;
+    //     next();
+    // } catch (err) {
+    //     res.redirect('/login.html');
+    // }
 }
 
 
