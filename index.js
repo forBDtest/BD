@@ -370,8 +370,6 @@ app.delete('/myOffers/:id', checkLogin, async (req, res) => {
 
 
 //get single offer
-
-//delete your own offers by id
 app.get('/getOffer/:id', checkLogin, async (req, res) => {
     const pathType = req.accountType == 'shelter' ? 's' : 'v';
     if (isNaN(parseInt(req.params.id))) return res.status(400).send({error:'Is that ID?! HUH, i didnt know :o'});
@@ -476,6 +474,36 @@ res.status(200).send(ids);
 
 
 
+
+
+async function redirect(req, res, next) {
+
+    // Get token from cookie or Authorization header
+    const cookieToken = req.cookies?.token;
+    const headerToken = req.headers.authorization?.split(' ')[1]; // Expecting format: "Bearer <token>"
+
+    const token = cookieToken || headerToken;
+
+    if (!token) {
+        return res.redirect('/login.html');
+    }
+
+    try {
+        const tokenData = await readData('token/' + token);
+        if (tokenData == 0) {
+            return     res.redirect('/login.html');
+
+        }
+
+        req.email = tokenData.email;
+        req.accountType = tokenData.accountType;
+        next();
+    } catch (err) {
+        res.redirect('/login.html');
+    }
+}
+
+
 import { fileURLToPath } from 'url';
 
 
@@ -506,7 +534,7 @@ app.get('/alerts.js', (req, res) => {
 });
 
 // Serve market page
-app.get('/market.html', (req, res) => {
+app.get('/market.html', redirect, (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'market.html'));
 });
 
@@ -517,41 +545,41 @@ app.get('/check.js', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'check.js'));
 });
 // Serve profile page
-app.get('/profile.html', (req, res) => {
+app.get('/profile.html', redirect, (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'profile.html'));
 });
 
 // Serve create offer page
-app.get('/create-offer.html', (req, res) => {
+app.get('/create-offer.html', redirect, (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'create-offer.html'));
 });
 
 // Serve view offer page
-app.get('/view-offer.html', (req, res) => {
+app.get('/view-offer.html', redirect, (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'view-offer.html'));
 });
 
 // Serve liked offers page
-app.get('/liked.html', (req, res) => {
+app.get('/liked.html', redirect, (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'liked.html'));
 });
 
 // Serve user data page
-app.get('/user.html', (req, res) => {
+app.get('/user.html', redirect, (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'user.html'));
 });
 
 // Serve my offers page
-app.get('/my-offers.html', (req, res) => {
+app.get('/my-offers.html', redirect, (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'my-offers.html'));
 });
 
 // Serve edit offer page
-app.get('/edit-offer.html', (req, res) => {
+app.get('/edit-offer.html', redirect, (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'edit-offer.html'));
 });
 
-app.get('/user.html', (req, res) => {
+app.get('/user.html', redirect, (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'user.html'));
 });
 
