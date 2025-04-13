@@ -493,6 +493,7 @@ async function redirect(req, res, next) {
     // } catch (err) {
     //     res.redirect('/login.html');
     // }
+    next();
 }
 
 
