@@ -1,0 +1,77 @@
+#navLinks {
+    display: flex;
+    flex-wrap: wrap;             /* Allow wrapping to next line */
+    justify-content: space-between;
+    align-items: center;
+    background-color: #333;
+    padding: 15px 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    margin-bottom: 30px;
+    gap: 10px;                   /* Optional: gap between wrapped items */
+}
+
+#navLinks a {
+    flex: 1 1 100px;             /* Allows shrinking/growing but sets a min width */
+    color: #fff;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    padding: 8px 15px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+@media (max-width: 500px) {
+    #navLinks {
+        flex-direction: column;
+        align-items: stretch;   /* Make links full width */
+    }
+
+    #navLinks a {
+        flex: none;
+        width: 100%;
+        margin: 5px 0;
+    }
+}
+
+#navLinks a:hover {
+    background-color: #5a52e6;
+    color: #fff;
+    transform: translateY(-2px);
+  }
+
+  #navLinks .active {
+    background-color: #6c63ff;
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.5);
+  }
+
+  #navLinks a:focus {
+    outline: none;
+  }
+
+
+.footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    padding: 20px;
+    background-color: #ffffff;
+    border-top: 1px solid #ddd;
+    z-index: 10;
+  }
+
+  .footer2 {
+    width: 100%;
+    height: 50px;
+  }
+
+  .footer p {
+    font-size: 14px;
+    color: #555;
+    margin: 0;
+  }

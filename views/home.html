@@ -123,26 +123,44 @@
 }
 
 
-        #navLinks {
+#navLinks {
     display: flex;
-    justify-content: center;   /* Centers the navigation items horizontally */
-    align-items: center;       /* Vertically aligns the items in the center */
-    background-color: #333;    /* Dark background for contrast */
-    padding: 15px 20px;        /* Add padding for spacing */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
-    margin-bottom: 30px;       /* Space below the navbar */
+    flex-wrap: wrap;             /* Allow wrapping to next line */
+    justify-content: space-between;
+    align-items: center;
+    background-color: #333;
+    padding: 15px 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    margin-bottom: 30px;
+    gap: 10px;                   /* Optional: gap between wrapped items */
 }
 
 #navLinks a {
-    color: #fff;               /* White color for the links */
-    text-decoration: none;     /* Remove underline */
-    margin: 0 15px;            /* Spacing between the links */
-    font-size: 16px;           /* Set font size */
-    font-weight: 500;          /* Medium weight for readability */
-    transition: all 0.3s ease; /* Smooth transition for hover effect */
-    padding: 8px 15px;         /* Add some padding inside the links for better clickable area */
-    border-radius: 5px;        /* Rounded corners for each link */
+    flex: 1 1 100px;             /* Allows shrinking/growing but sets a min width */
+    color: #fff;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    padding: 8px 15px;
+    border-radius: 5px;
+    text-align: center;
 }
+
+
+@media (max-width: 500px) {
+    #navLinks {
+        flex-direction: column;
+        align-items: stretch;   /* Make links full width */
+    }
+
+    #navLinks a {
+        flex: none;
+        width: 100%;
+        margin: 5px 0;
+    }
+}
+
 
 #navLinks a:hover {
     background-color: #5a52e6; /* Blue background on hover */
