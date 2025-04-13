@@ -424,7 +424,7 @@ app.delete('/liked', processData('id'), checkLogin, async (req, res) => {
 //show favourited offers
 app.get('/liked', checkLogin, async (req, res) => {
     const ids = await readData('user/' + encodeData(req.email) + '/liked') || {};
-    const pathType = req.accountType == 'shelter' ? 's' : 'v';
+    const pathType = req.accountType == 'shelter' ? 'v' : 's';
     const checks = Object.keys(ids).map(async (id) => {
         const mainKeySnap = await readData(pathType + 'Post/' + id);
         return { id, value: mainKeySnap };
