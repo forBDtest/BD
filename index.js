@@ -383,7 +383,7 @@ app.get('/getOffer/:id', checkLogin, async (req, res) => {
 
 //browse marketplace based on your accont type
 app.get('/market', checkLogin, async (req, res) => {
-    const pathType = req.accountType == 'shelter' ? 's' : 'v';
+    const pathType = req.accountType == 'shelter' ? 'v' : 's';
     const userPath = `${pathType}Post`;
     let result = await readData(userPath);
     if (result != 0) {
@@ -395,7 +395,7 @@ app.get('/market', checkLogin, async (req, res) => {
 
 //marketplace with filters
 app.get('/market/filter', checkLogin, async (req, res) => {
-    const pathType = req.accountType == 'shelter' ? 's' : 'v';
+    const pathType = req.accountType == 'shelter' ? 'v' : 's';
     const userPath = `${pathType}Post`;
     if (!req.query.key && !req.query.value) return res.status(400).send({error:'Wrong query proveded'});
     if (!["colour", "species", "age", "sex", "health", "status"].includes(req.query.key)) return res.status(400).send({error:'filtering supported by colour, species, age, sex, health, status'});
