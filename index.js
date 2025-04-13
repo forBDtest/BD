@@ -707,7 +707,7 @@ app.get('/offerImage/:id', checkLogin, (req, res) => {
 
 
 
-app.post('/userImage/:id',checkLogin, upload.single('image'), (req, res) => {
+app.post('/userImage',checkLogin, upload.single('image'), (req, res) => {
     const imageBuffer = req.file?.buffer;
 
     if (!imageBuffer) {
@@ -737,7 +737,9 @@ app.post('/userImage/:id',checkLogin, upload.single('image'), (req, res) => {
 
 
 
-app.get('/userImage/:id', checkLogin, (req, res) => {
+
+
+app.get('/userImage', checkLogin, (req, res) => {
     const filePath = path.join(__dirname, 'images', 'user', `${encodeURIComponent(req.email)}.png`);
     const filePath2 = path.join(__dirname, 'images', `defaultUser.png`);
 
@@ -761,7 +763,29 @@ app.get('/userImage/:id', checkLogin, (req, res) => {
 
 
 
+app.get('/userImage/:id', checkLogin,async (req, res) => {
+    const result = await readData('user/' + encodeData(req.params.email));
+    if (result != 0) {
+    const filePath = path.join(__dirname, 'images', 'user', `${encodeURIComponent(req.email)}.png`);
+    const filePath2 = path.join(__dirname, 'images', `defaultUser.png`);
 
+    fs.access(filePath, fs.constants.F_OK, (err) => {
+        if (err) {
+            fs.access(filePath2, fs.constants.F_OK, (err2) => {
+                if (err2) {
+                    return res.status(404).send({ error: 'Default image not found' });
+                } else {
+                    return res.sendFile(filePath2);
+                }
+        
+            });
+        } else {
+            return res.sendFile(filePath);
+        }
+
+    });
+}
+});
 
 
 
