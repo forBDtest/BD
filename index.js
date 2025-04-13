@@ -168,9 +168,9 @@ async function checkLogin(req, res, next) {
 
 
 //--------------------------
-app.post('/volonteer/register', processData('image', 'email', 'password', 'name', 'surname', 'address', 'phone'), async (req, res) => {
+app.post('/volonteer/register', processData('email', 'password', 'name', 'surname', 'address', 'phone'), async (req, res) => {
     console.log('Registering user...');
-    let {image, email, password, name, surname, address, phone } = req.body;
+    let { email, password, name, surname, address, phone } = req.body;
 
     const userPath = `user/${encodeData(email)}`;
     const existingUser = await readData(userPath);
@@ -179,7 +179,7 @@ app.post('/volonteer/register', processData('image', 'email', 'password', 'name'
         return res.status(400).send({error:'Email already registered'});
     }
 
-    const result = await setData(userPath, {image, password, name, surname, address, phone, accountType: "volonteer" });
+    const result = await setData(userPath, { password, name, surname, address, phone, accountType: "volonteer" });
     if (result) {
         res.status(200).send({message:'User registered successfully'});
     } else {
@@ -187,8 +187,8 @@ app.post('/volonteer/register', processData('image', 'email', 'password', 'name'
     }
 });
 
-app.post('/shelter/register', processData('image', 'email', 'password', 'name', 'address', 'phone', 'contact_name', 'contact_surname', 'contact_position', 'website', 'social_media'), async (req, res) => {
-    let { image, email, password, name, address, phone, contact_name, contact_surname, contact_position, website, social_media } = req.body;
+app.post('/shelter/register', processData('email', 'password', 'name', 'address', 'phone', 'contact_name', 'contact_surname', 'contact_position', 'website', 'social_media'), async (req, res) => {
+    let { email, password, name, address, phone, contact_name, contact_surname, contact_position, website, social_media } = req.body;
 
     const userPath = `user/${encodeData(email)}`;
     const existingUser = await readData(userPath);
@@ -197,7 +197,7 @@ app.post('/shelter/register', processData('image', 'email', 'password', 'name', 
         return res.status(400).send({error:'Email already registered'});
     }
 
-    const result = await setData(userPath, { image, password, name, address, phone, contact_name, contact_surname, contact_position, website, social_media, accountType: "shelter" });
+    const result = await setData(userPath, { password, name, address, phone, contact_name, contact_surname, contact_position, website, social_media, accountType: "shelter" });
     if (result) {
         res.status(200).send({message:'User registered successfully'});
     } else {
@@ -243,9 +243,9 @@ app.get('/myInfo', checkLogin, async (req, res) => {
     if (result != 0) {
         let formedData;
         if (result.accountType == 'volonteer') {
-            formedData = formData(result,'image', 'name', 'surname', 'address', 'phone');
+            formedData = formData(result, 'name', 'surname', 'address', 'phone');
         } else {
-            formedData = formData(result,'image', 'name', 'surname', 'address', 'phone', 'contact_name', 'contact_surname', 'contact_position', 'website', 'social_media');
+            formedData = formData(result, 'name', 'surname', 'address', 'phone', 'contact_name', 'contact_surname', 'contact_position', 'website', 'social_media');
         }
         formedData.email = req.email;
         formedData.accountType = req.accountType;
@@ -271,9 +271,9 @@ app.post('/editProfile', checkLogin, async (req, res) => {
     }
 
     } else {
-    processData('image', 'name', 'address', 'phone', 'contact_name', 'contact_surname', 'contact_position', 'website', 'social_media');
-    let { image, name, address, phone, contact_name, contact_surname, contact_position, website, social_media } = req.body;
-    const result = await updateData(userPath, {image, name, address, phone, contact_name, contact_surname, contact_position, website, social_media});
+    processData('name', 'address', 'phone', 'contact_name', 'contact_surname', 'contact_position', 'website', 'social_media');
+    let { name, address, phone, contact_name, contact_surname, contact_position, website, social_media } = req.body;
+    const result = await updateData(userPath, { name, address, phone, contact_name, contact_surname, contact_position, website, social_media});
     if (result) {
         res.status(200).send({message:'User updated successfully'});
     } else {
@@ -291,9 +291,9 @@ app.get('/userInfo/:email', async (req, res) => {
     if (result != 0) {
         let formedData;
         if (result.accountType == 'volonteer') {
-            formedData = formData(result,'image', 'name', 'surname', 'address', 'phone', 'accountType');
+            formedData = formData(result, 'name', 'surname', 'address', 'phone', 'accountType');
         } else  {
-            formedData = formData(result,'image', 'name', 'surname', 'address', 'phone', 'contact_name', 'contact_surname', 'contact_position', 'website', 'social_media', 'accountType');
+            formedData = formData(result, 'name', 'surname', 'address', 'phone', 'contact_name', 'contact_surname', 'contact_position', 'website', 'social_media', 'accountType');
         }
         formedData.email = req.params.email;
         res.status(200).send(formedData);
