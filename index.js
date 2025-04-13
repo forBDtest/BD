@@ -139,14 +139,31 @@ function processData(...fields) {
 
 //login via token and define email and account type
 async function checkLogin(req, res, next) {
-    const token = req.cookies.token;
-    if (!token) return res.status(401).send({error:'Missing token'});
-    const tokenData = await readData('token/' + token);
-    if (tokenData == 0) return res.status(401).send({error:'Wrong token'});
-    req.email = tokenData.email;
-    req.accountType = tokenData.accountType;
-    next();
+    // Get token from cookie or Authorization header
+    const cookieToken = req.cookies?.token;
+    const headerToken = req.headers.authorization?.split(' ')[1]; // Expecting format: "Bearer <token>"
+
+    const token = cookieToken || headerToken;
+
+    if (!token) {
+        return res.status(401).send({ error: 'Missing token' });
+    }
+
+    try {
+        const tokenData = await readData('token/' + token);
+        if (tokenData == 0) {
+            return res.status(401).send({ error: 'Wrong token' });
+        }
+
+        req.email = tokenData.email;
+        req.accountType = tokenData.accountType;
+        next();
+    } catch (err) {
+        console.error('Token check error:', err);
+        res.status(500).send({ error: 'Server error during authentication' });
+    }
 }
+
 
 //--------------------------
 app.post('/volonteer/register', processData('email', 'password', 'name', 'surname', 'address', 'phone'), async (req, res) => {
