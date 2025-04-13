@@ -766,7 +766,7 @@ app.get('/userImage', checkLogin, (req, res) => {
 app.get('/userImage/:id', checkLogin,async (req, res) => {
     const result = await readData('user/' + encodeData(req.params.email));
     if (result != 0) {
-    const filePath = path.join(__dirname, 'images', 'user', `${encodeURIComponent(req.email)}.png`);
+    const filePath = path.join(__dirname, 'images', 'user', `${encodeURIComponent(encodeURIComponent(req.params.email))}.png`);
     const filePath2 = path.join(__dirname, 'images', `defaultUser.png`);
 
     fs.access(filePath, fs.constants.F_OK, (err) => {
@@ -784,7 +784,7 @@ app.get('/userImage/:id', checkLogin,async (req, res) => {
         }
 
     });
-}
+} else return res.status(404).send({ error: 'user not found' });
 });
 
 
