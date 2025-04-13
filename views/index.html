@@ -1,54 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-    <script>
-        function createObjectFromParams(...params) {
-            const obj = {};
-            params.forEach(param => {
-                const element = document.getElementById(param);
-                if (element) {
-                    obj[param] = element.value;
-                }
-            });
-            return obj;
-        }
-
-        async function handleLogin() {
-            const loginData = createObjectFromParams('email', 'password');
-            try {
-                const response = await fetch('/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(loginData)
-                });
-                const result = await response.json();
-
-                if (response.status === 200) {
-                    // Set the token in cookies
-                    document.cookie = `token=${result.token}; path=/`;
-
-                    // Redirect to profile page after successful login
-                    window.location.href = '/profile.html';
-                } else {
-                    alert(result.error || 'Login failed');
-                }
-            } catch (error) {
-                alert('An error occurred');
-            }
-        }
-    </script>
+  <meta charset="UTF-8">
+  <title>Test Image Upload / Get</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    input, button { margin: 10px 0; display: block; }
+    img { max-width: 300px; margin-top: 20px; }
+  </style>
 </head>
 <body>
-    <h1>Login</h1>
-    <form id="loginForm">
-        <input type="email" id="email" placeholder="Email" required><br><br>
-        <input type="password" id="password" placeholder="Password" required><br><br>
-        <button type="button" onclick="handleLogin()">Login</button>
-    </form>
-    <br>
-    <a href="shelter-register.html">Register as Shelter</a> | <a href="volonteer-register.html">Register as Volunteer</a>
+
+  <h2>Upload Image</h2>
+  <input type="text" id="uploadId" placeholder="Enter ID">
+  <input type="file" id="uploadFile">
+  <button onclick="uploadImage()">Upload</button>
+
+  <h2>Get Image</h2>
+  <input type="text" id="getId" placeholder="Enter ID to retrieve">
+  <button onclick="getImage()">Get Image</button>
+  <img id="preview" src="" alt="Image will appear here">
+
+  <script>
+    async function uploadImage() {
+      const id = document.getElementById('uploadId').value;
+      const fileInput = document.getElementById('uploadFile');
+      const file = fileInput.files[0];
+
+      if (!id || !file) {
+        alert('Please provide both ID and image file.');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('image', file);
+
+      try {
+        const res = await fetch(`/postImage/${id}`, {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+        alert(data.message || JSON.stringify(data));
+      } catch (err) {
+        console.error(err);
+        alert('Upload failed');
+      }
+    }
+
+    async function getImage() {
+      const id = document.getElementById('getId').value;
+      if (!id) return alert('Enter an ID');
+
+      const img = document.getElementById('preview');
+      img.src = `/getImage/${id}?t=${Date.now()}`; // cache buster
+    }
+  </script>
 </body>
 </html>

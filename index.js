@@ -5,6 +5,9 @@ import path from 'path';
 import { initializeApp } from "firebase/app";
 import { update, get, getDatabase, ref, set, query, orderByChild, equalTo, endAt } from "firebase/database";
 import cookieParser from 'cookie-parser';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import multer from 'multer';
 
 const app = express();
 const port = 3000;
@@ -18,7 +21,6 @@ const port = 3000;
   
 //   app.use(cors(corsOptions));  
 app.use(cors());
-  
 app.use(express.json());
 app.use(cookieParser());
 // Your web app's Firebase configuration
@@ -305,7 +307,6 @@ app.get('/userInfo/:email', async (req, res) => {
 //create offer based on user account type
 app.post('/myOffers', processData('photo', 'specie', 'sex', 'age', 'colour', 'health', 'status', 'description'), checkLogin, async (req, res) => {
     let { photo, specie, sex, age, colour, health, status, description } = req.body;
-    if (isNaN(parseInt(age))) res.status(400).send({error:'Age must be a number'});
     const pathType = req.accountType == 'shelter' ? 's' : 'v';
     const id = await readData(pathType + "id");
     setData(pathType + "id", id + 1);
@@ -333,12 +334,10 @@ app.get('/myOffers', checkLogin, async (req, res) => {
 
 //edit offer
 app.post('/editOffer/:id', processData('photo', 'specie', 'sex', 'age', 'colour', 'health', 'status', 'description'), checkLogin, async (req, res) => {
-    if (isNaN(parseInt(req.params.id))) return res.status(400).send({error:'Is that ID?! HUH, i didnt know :o'});
     let { photo, specie, sex, age, colour, health, status, description } = req.body;
-    if (isNaN(parseInt(age))) res.status(400).send({error:'Age must be a number'});
     const pathType = req.accountType == 'shelter' ? 's' : 'v';
-    const id = parseInt(req.params.id);
-    const userPath = `${pathType}Post/id${id}`;
+    const id = req.params.id;
+    const userPath = `${pathType}Post/${id}`;
     const check = await readData(userPath);
     if (!check) return res.status(400).send({error:'No such pet'});
     if (check.author != req.email) return res.status(403).send({error:'Its not your offer'});
@@ -354,7 +353,6 @@ app.post('/editOffer/:id', processData('photo', 'specie', 'sex', 'age', 'colour'
 //delete your own offers by id
 app.delete('/myOffers/:id', checkLogin, async (req, res) => {
     const pathType = req.accountType == 'shelter' ? 's' : 'v';
-    if (isNaN(parseInt(req.params.id))) return res.status(400).send({error:'Is that ID?! HUH, i didnt know :o'});
     const userPath = `${pathType}Post/` + req.params.id;
     const result = await readData(userPath);
     if (result != 0) {
@@ -372,7 +370,6 @@ app.delete('/myOffers/:id', checkLogin, async (req, res) => {
 //get single offer
 app.get('/getOffer/:id', checkLogin, async (req, res) => {
     const pathType = req.accountType == 'shelter' ? 's' : 'v';
-    if (isNaN(parseInt(req.params.id))) return res.status(400).send({error:'Is that ID?! HUH, i didnt know :o'});
     const userPath = `${pathType}Post/` + req.params.id;
     const result = await readData(userPath);
     if (result != 0) {
@@ -504,9 +501,6 @@ async function redirect(req, res, next) {
 }
 
 
-import { fileURLToPath } from 'url';
-
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use(express.static(path.join(__dirname, 'public')));
@@ -595,6 +589,111 @@ app.get('/bg.png', (req, res) => {
 app.get('/main.css', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'main.css'));
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+async function checkID(req,res,next) {
+    const pathType = req.accountType == 'shelter' ? 's' : 'v';
+    req.pathType = pathType;
+    const id = req.params.id;
+    const userPath = `${pathType}Post/${id}`;
+    console.log(userPath);
+    const check = await readData(userPath);
+    if (!check) return res.status(400).send({error:'No such pet'});
+    if (check.author != req.email) return res.status(403).send({error:'Its not your offer'});
+    next();
+}
+
+
+
+
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+
+app.post('/postImage/:id',checkLogin,checkID, upload.single('image'), (req, res) => {
+    const { id } = req.params;
+    const imageBuffer = req.file?.buffer;
+
+    if (!imageBuffer) {
+        return res.status(400).send({ error: 'No image uploaded' });
+    }
+
+    const dirPath = path.join(__dirname, 'images', req.pathType+'Post');
+    console.log(req.pathType);
+    const filePath = path.join(dirPath, `${id}.png`);
+
+    // Ensure the directory exists
+    fs.mkdir(dirPath, { recursive: true }, (mkdirErr) => {
+        if (mkdirErr) {
+            console.error('Failed to create directory:', mkdirErr);
+            return res.status(500).send({ error: 'Failed to create directory' });
+        }
+
+        fs.writeFile(filePath, imageBuffer, (writeErr) => {
+            if (writeErr) {
+                console.error('Error writing file:', writeErr);
+                return res.status(500).send({ error: 'Error saving image' });
+            }
+
+            res.send({ message: 'Image saved successfully' });
+        });
+    });
+});
+
+
+app.get('/getImage/:id', checkLogin, (req, res) => {
+    const { id } = req.params;
+    const pathType = req.accountType == 'shelter' ? 's' : 'v';
+    const filePath = path.join(__dirname, 'images', pathType+'Post', `${id}.png`);
+
+    fs.access(filePath, fs.constants.F_OK, (err) => {
+        if (err) {
+            return res.status(404).send({ error: 'Image not found' });
+        }
+
+        res.sendFile(filePath);
+    });
+});
+
+
 
 
 
