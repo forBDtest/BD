@@ -787,7 +787,7 @@ app.get('/userImage', checkLogin, (req, res) => {
 
 
 
-app.get('/userImage/:email', checkLogin,async (req, res) => {
+app.get('/userImage/:email',async (req, res) => {
     const result = await readData('user/' + encodeData(req.params.email));
     if (result != 0) {
     const filePath = path.join(__dirname, 'images', 'user', `${encodeURIComponent(encodeURIComponent(req.params.email))}.png`);
